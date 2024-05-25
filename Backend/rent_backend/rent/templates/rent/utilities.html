@@ -1,0 +1,48 @@
+{% extends "rent/layout.html" %}
+
+{% block body %}
+
+{% if message %}
+    <h2>{{message}}</h2>
+{% endif %}
+ 
+<form id="utilities-form" action="{% url 'utilities' landlord.id %}" method="POST">
+    {% csrf_token %}
+    <input type="number" name="rent" placeholder="Enter the rent">
+    <div id="utility-fields">
+        <div class="utility">
+            <input type="text" name="utility_name[]" placeholder="Utility name">
+            <input type="number" name="utility_cost[]" placeholder="Utility cost">
+        </div>
+    </div>
+    <button type="button" id="add-utility">Add Utility</button>
+    <input type="submit">
+</form>
+
+<script>
+    document.getElementById('add-utility').addEventListener('click', function() {
+        var utilityFields = document.getElementById('utility-fields');
+        var utility = document.createElement('div');
+        utility.classList.add('utility');
+        utility.innerHTML = `
+            <input type="text" name="utility_name[]" placeholder="Utility name">
+            <input type="number" name="utility_cost[]" placeholder="Utility cost">
+        `;
+        utilityFields.appendChild(utility);
+    });
+</script>
+
+<ul>
+    {% for utility in utilities %}
+        <li>Rent is {{utility.rent}}</li>
+        <li>{{utility.utility_name}} : {{utility.utility_cost}}</li>
+        <li>The total is {{utility.total}}</li>
+        <form  action="{% url 'delete_utilities' utility.id %}" method="POST">
+            {% csrf_token %}
+            <input type="submit" value="remove">
+        </form>
+    {% endfor %}
+</ul>
+<a href="{% url 'tenants' %}" style="text-decoration: none;">Done</a>
+
+{% endblock %}

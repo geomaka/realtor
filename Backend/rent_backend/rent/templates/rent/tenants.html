@@ -1,0 +1,17 @@
+{% extends "rent/layout.html" %}
+
+{% block body %}
+<h1>Tenants</h1>
+
+    <ul>
+        {% for tenant in tenants %}
+        <a href="{% url 'tenant-detail' tenant.id %}" style="text-decoration: none;">
+            <li>{{tenant}}</li>
+        </a>
+        <a href="{% url 'confirmdelete' tenant.id%}">
+        <input type="button" value="delete">
+        </a>
+        {% endfor %}
+    </ul>
+
+{% endblock %}

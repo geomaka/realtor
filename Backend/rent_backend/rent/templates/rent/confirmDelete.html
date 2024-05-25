@@ -1,0 +1,15 @@
+{% extends "rent/layout.html" %}
+
+{% block body %}
+
+<h1>Are you sure you want to delete {{tenant.first_name}}</h1>
+
+<form action="{% url 'confirmdelete' tenant.id %}" method="POST">
+    {% csrf_token %}
+    <input type="submit" value="yes">
+    <a href="{% url 'tenants' %}">
+        <input type="button" value="no">
+    </a>
+</form>
+
+{% endblock %}
