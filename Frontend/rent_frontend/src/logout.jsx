@@ -12,7 +12,7 @@ function Logout (){
         let data = await response.json()
         if(data.message){
             setMessage(data.message)
-            // navigate('/login')
+            navigate('/login')
             setLoggedOut(true)
         }
         console.log(data)
@@ -23,7 +23,7 @@ function Logout (){
         <div>
             <form onSubmit={logOut}>
                 <input type="submit" value= "Log out" 
-                className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"/>
+                className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800 mt-4 ml-4"/>
             </form>
         </div>
         </>

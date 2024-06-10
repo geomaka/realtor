@@ -72,6 +72,7 @@ function AdminSignupForm() {
               <input
                 type="text"
                 value={first_name}
+                required
                 onChange={(e) => { setFirst(e.target.value) }}
                 name='first_name'
                 placeholder='Enter first name'
@@ -84,6 +85,7 @@ function AdminSignupForm() {
               <input
                 type="text"
                 value={last_name}
+                required
                 onChange={(e) => { setLast(e.target.value) }}
                 name='last_name'
                 placeholder='Enter lastname'
@@ -96,6 +98,7 @@ function AdminSignupForm() {
               <input
                 type="text"
                 value={phone}
+                required
                 onChange={(e) => { setPhone(e.target.value) }}
                 name='phone'
                 placeholder='Enter phone number'
@@ -108,6 +111,7 @@ function AdminSignupForm() {
               <input
                 type="email"
                 value={email}
+                required
                 onChange={(e) => { setEmail(e.target.value) }}
                 name='email'
                 placeholder='email'
@@ -120,6 +124,7 @@ function AdminSignupForm() {
               <input
                 type="password"
                 value={password}
+                required
                 onChange={(e) => { setPassword(e.target.value) }}
                 name="password"
                 placeholder='password'

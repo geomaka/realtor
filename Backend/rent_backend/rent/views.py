@@ -17,7 +17,8 @@ from django.middleware.csrf import get_token
 from django.views.decorators.csrf import ensure_csrf_cookie,csrf_protect
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.models import User
-
+from django.contrib.auth import authenticate, login as auth_login
+from rest_framework.authtoken.models import Token
 
 # Create your views here.
 def index(request):
@@ -93,50 +94,74 @@ def signup(request):
 
 def login(request):
     if request.method == "POST":
-        data = json.loads(request.body)
-        email = data.get("email")
-        password = data.get("password")
-
         try:
-            landlord = Landlord.objects.get(email=email)
-            if check_password(password, landlord.password):
-                user, created = User.objects.get_or_create(username=landlord.email, defaults={"password": password})
-                if created:
-                    user.set_password(password)
-                    user.save()
+            data = json.loads(request.body)
+            email = data.get("email")
+            password = data.get("password")
 
-                auth_login(request, user) 
-                return JsonResponse({
-                    'status': 'success',
-                    'role': 'landlord',
-                    'landlordID' : landlord.id
-                })
-            else:
+            if not email or not password:
+                return JsonResponse({'error': 'Email and password are required.'}, status=400)
+
+            try:
+                landlord = Landlord.objects.get(email=email)
+                if check_password(password, landlord.password):
+                    user, created = User.objects.get_or_create(username=landlord.email, defaults={"password": password})
+                    if created:
+                        user.set_password(password)
+                        user.save()
+                    
+                    user.backend = 'django.contrib.auth.backends.ModelBackend' 
+
+                    user = authenticate(request, username=landlord.email, password=password)
+                    if user is not None:
+                        auth_login(request, user)
+                        
+                        token, _ = Token.objects.get_or_create(user=user)
+                        
+                        return JsonResponse({
+                            'status': 'success',
+                            'role': 'landlord',
+                            'landlordID': landlord.id,
+                            'token': token.key
+                        })
+
                 return JsonResponse({'error': 'Invalid login details'}, status=401)
 
-        except Landlord.DoesNotExist:
-            pass
-            try:
-                tenant = Tenant.objects.get(email=email)
-                if check_password(password, tenant.password):
-                    return JsonResponse({
-                        'status': 'success',
-                        'role': 'tenant',
-                        'tenantID' : tenant.house_number
-                    })
-                else:
+            except Landlord.DoesNotExist:
+                try:
+                    tenant = Tenant.objects.get(email=email)
+                    if check_password(password, tenant.password):
+                        user, created = User.objects.get_or_create(username=tenant.email, defaults={"password": password})
+                        if created:
+                            user.set_password(password)
+                            user.save()
+                        
+                        user.backend = 'django.contrib.auth.backends.ModelBackend'  # Use the appropriate backend
+
+                        user = authenticate(request, username=tenant.email, password=password)
+                        if user is not None:
+                            token, _ = Token.objects.get_or_create(user=user)
+                            
+                            return JsonResponse({
+                                'status': 'success',
+                                'role': 'tenant',
+                                'tenantID': tenant.house_number,
+                                'token': token.key
+                            })
                     return JsonResponse({'error': 'Invalid login details'}, status=401)
 
-            except Tenant.DoesNotExist:
-                return JsonResponse({'error': 'Invalid login details. No user found with this email.'}, status=404)
+                except Tenant.DoesNotExist:
+                    return JsonResponse({'error': 'Invalid login details. No user found with this email.'}, status=404)
 
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+    
     else:
         return JsonResponse({'error': 'Method not allowed'}, status=405)
         
-        
 
 def tenants(request):
-    tenants = list(Tenant.objects.all().values())  # Convert queryset to list of dictionaries
+    tenants = list(Tenant.objects.all().values())
     return JsonResponse({'tenants': tenants})
 
 def tenant_detail(request, tenant_id):
@@ -210,7 +235,7 @@ def payments(request, tenant_id):
             phone_number = tenant.phone
             amount = int(amount_paid)
             account_reference = 'George Maina'
-            transaction_desc = 'Description'
+            transaction_desc = 'Rent payment'
             callback_url = 'https://api.darajambili.com/express-payment'
             response = cl.stk_push(phone_number, amount, account_reference, transaction_desc, callback_url)
 
@@ -240,7 +265,12 @@ def payments_received(request, landlord_id):
     try:
         landlord = Landlord.objects.get(pk=landlord_id)
         payments_received = Payments.objects.filter(landlord=landlord)
-        print(landlord)
+        landlord_data = {
+            "first_name" : landlord.first_name,
+            "last_name" : landlord.last_name,
+            "email" : landlord.email,
+            "phone" : landlord.phone
+            }
         payment_received_data = []
         for payment_received in payments_received:
             payment = PaymentsReceived.objects.create(landlord = landlord,tenant=payment_received.tenant, amount = payment_received,balance = payment_received.amount,total_amount = payment_received.amount)
@@ -252,7 +282,7 @@ def payments_received(request, landlord_id):
                 # "total_amount": payment_received.total_amount
             })
         
-        return JsonResponse({'payments_received': payment_received_data})
+        return JsonResponse({'payments_received': payment_received_data,"landlord" : landlord_data})
     
     except Landlord.DoesNotExist:
         return JsonResponse({'error': 'Landlord not found'}, status=404)

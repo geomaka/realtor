@@ -2,82 +2,90 @@ import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import axios from 'axios';
 
-function Payments (){
-    const [payments,setPayments] = useState([])
-    const [amount,setAmount] = useState('')
-    const { tenantID }= useParams()
-    
-    console.log(tenantID)
+function Payments() {
+  const [payments, setPayments] = useState([])
+  const [amount, setAmount] = useState('')
+  const { tenantID } = useParams()
 
-    const fetchPayments = async () =>{
-      let response = await fetch(`http://localhost:8000/rent/tenants/${tenantID}/payments`)
-      let data = await response.json()
-      setPayments(data.payments)
-      console.log(payments)
+  console.log(tenantID)
+
+  const fetchPayments = async () => {
+    let response = await fetch(`http://localhost:8000/rent/tenants/${tenantID}/payments`)
+    let data = await response.json()
+    setPayments(data.payments)
+    console.log(payments)
+  }
+
+  useEffect(() => {
+    fetchPayments()
+  }, [])
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    let data_to_be_posted = {
+      amount
     }
+    fetch(`http://localhost:8000/rent/tenants/${tenantID}/payments`, {
+      method: "POST",
+      body: JSON.stringify(data_to_be_posted),
+      headers: { 'Content-Type': 'application/json' }
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setPayments([data.data])
+        fetchPayments()
+        console.log(data)
+      })
+      .catch((error) => {
+        console.log(error)
+      })
+  }
 
-    useEffect(() =>{
-      fetchPayments()
-    },[])
- 
-    const handleSubmit = (e) =>{
-        e.preventDefault()
-        let data_to_be_posted = {
-            amount
-        }
-        fetch(`http://localhost:8000/rent/tenants/${tenantID}/payments`,{
-            method : "POST",
-            body : JSON.stringify(data_to_be_posted),
-            headers : {'Content-Type' : 'application/json'}
-        })
-        .then((res) => res.json())
-        .then((data) => {
-          setPayments([data.data])
-          fetchPayments()
-          console.log(data.data)})
-        .catch((error) =>{
-            console.log(error)
-        })
-    }
-
-    return (
-        <>
-        <h1>Pay:</h1>
-        <form onSubmit={handleSubmit}>
-        <input 
-            type="number" 
+  return (
+    <>
+      <h1 className='m-4'>Make payments</h1>
+      <form onSubmit={handleSubmit}>
+        <div className='mb-6'>
+          <label for="small-input" class="block m-4 text-sm font-medium text-gray-900 dark:text-black">Enter the amount to pay</label>
+          <input
+            type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            name="amount" 
-            placeholder="Enter the amount to pay"/>
-        <button type="submit">Pay</button>
-        </form>
-        <h2>Payments made</h2>
-    <table border="1">
-      <thead>
-        <tr>
-          <th>Tenant</th>
-          <th>Landlord</th>
-          <th>Amount Paid</th>
-          <th>Balance</th>
-          <th>Date Paid</th>
-        </tr>
-      </thead>
-      <tbody>
-        {payments.map((payment, index) => (
-          <tr key={index}>
-            <td>{payment.name}</td>
-            <td>{payment.landlord}</td>
-            <td>{payment.Paid}</td>
-            <td>{payment.balance}</td>
-            <td>{payment.date_Paid}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+            name="amount"
+            placeholder="Enter the amount to pay"
+            className='m-4 block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs focus:ring-blue-500 focus:border-blue-500 dark:bg-white dark:border-gray-600 dark:placeholder-gray-400 dark:text-black dark:focus:ring-blue-500 dark:focus:border-blue-500' />
+        </div>
+        <button type="submit" className='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 m-4 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800'>Pay</button>
+      </form>
+      <h2 className='m-4'>Payments made</h2>
+      <div className='relative overflow-x-auto'>
+        <table border="1" className='w-full text-sm text-left rtl:text-right text-gray-500 dark:text-black'>
+          <thead className='text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400'>
+            <tr>
+              <th scope="col" className="px-6 py-3">Tenant</th>
+              <th scope="col" className="px-6 py-3">Landlord</th>
+              <th scope="col" className="px-6 py-3">Amount Paid</th>
+              <th scope="col" className="px-6 py-3">Balance</th>
+              <th scope="col" className="px-6 py-3">Date Paid</th>
+            </tr>
+          </thead>
+          <tbody>
+            {payments.map((payment, index) => (
+              <tr key={index}>
+                <td className='px-6 py-4'>{payment.name}</td>
+                <td className='px-6 py-4'>{payment.landlord}</td>
+                <td className='px-6 py-4'>{payment.Paid}</td>
+                <td className='px-6 py-4'>{payment.balance}</td>
+                <td className='px-6 py-4'>{payment.date_Paid}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <button className='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 ml-4 mt-4'>Download as pdf</button>
+      </div>
 
-        </>
-    )
+    </>
+  )
 }
 
 export default Payments;

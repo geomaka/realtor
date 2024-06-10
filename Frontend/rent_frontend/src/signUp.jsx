@@ -65,6 +65,7 @@ function SignUp() {
               <input
                 type="text"
                 value={house_number}
+                required
                 onChange={(e) => setHouse(e.target.value)}
                 name="house_number"
                 placeholder="Enter the house number"
@@ -77,6 +78,7 @@ function SignUp() {
               <input
                 type="text"
                 value={first_name}
+                required
                 onChange={(e) => setFirst(e.target.value)}
                 name="first_name"
                 placeholder="Enter first name"
@@ -89,6 +91,7 @@ function SignUp() {
               <input
                 type="text"
                 value={last_name}
+                required
                 onChange={(e) => setLast(e.target.value)}
                 name="last_name"
                 placeholder="Enter last name" 
@@ -101,6 +104,7 @@ function SignUp() {
               <input
                 type="text"
                 value={phone}
+                required
                 onChange={(e) => setPhone(e.target.value)}
                 name="phone"
                 placeholder="Enter phone"
@@ -113,6 +117,7 @@ function SignUp() {
               <input
                 type="email"
                 value={email}
+                required
                 onChange={(e) => setEmail(e.target.value)}
                 name="email"
                 placeholder="Enter email"
@@ -125,6 +130,7 @@ function SignUp() {
               <input
                 type="password"
                 value={password}
+                required
                 onChange={(e) => setPassword(e.target.value)}
                 name="password"
                 placeholder="password"
