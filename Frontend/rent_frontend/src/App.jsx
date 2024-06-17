@@ -9,6 +9,8 @@ import Payments from './payments';
 import Login from './login';
 import Account from './account';
 import PaymentsReceived from './paymentsRecieved';
+import TenantAccount from './tenantAccount';
+import TenantInfo from './tenantsInfo';
 
 function App() {
 
@@ -22,9 +24,11 @@ function App() {
           <Route path='/:landlordID/delete-utility/:utilityID' element ={< Utilities />} />
           <Route path='/:landlordID/account' element = {<Account/>}/>
           <Route path='/:landlordID/payments-received' element = {<PaymentsReceived/>}/>
+          <Route path='/:landlordID/tenant-info/:tenantID' element = {< TenantInfo />}/>
           <Route path='/signup' element = {< SignUp />} />
           <Route path='/:tenantID' element ={< Tenant />} />
           <Route path='/:tenantID/payments' element = {< Payments />} />
+          <Route path='/:tenantID/my-account' element = {< TenantAccount />} />
           <Route path='/login' element = {< Login />} />
         </Routes>
     </Router>

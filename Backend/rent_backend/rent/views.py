@@ -290,15 +290,18 @@ def payments_received(request, landlord_id):
 def delete(request,tenant_id):
     tenant = Tenant.objects.get(pk = tenant_id)
 
-    if request.method == "POST":
-        tenant.delete()
+    if request.method == "DELETE":
+        try:
+            tenant = Tenant.objects.get(pk=tenant_id)
 
-        return HttpResponseRedirect(reverse('tenants'))
+            tenant.delete()
 
-    else:
-        return render(request, "rent/confirmDelete.html",{
-            "tenant" : tenant
-        })
+            return JsonResponse({"status": "success", "message": f"Tenant with ID {tenant_id} has been deleted."})
+
+        except Tenant.DoesNotExist:
+            return JsonResponse({"status": "error", "message": f"Tenant with ID {tenant_id} does not exist."}, status=404)
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
 def utilities(request, landlord_id):
