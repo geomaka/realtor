@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { useNavigate,useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { TEInput, TERipple } from "tw-elements-react";
+import Footer from "./Components/footer";
 
 function Login() {
     const location = useLocation();
@@ -40,52 +42,78 @@ function Login() {
 
     return (
         <>
-            <div className="flex justify-center items-center h-screen">
-                <div className="w-full max-w-xs">
-                {loggedOut && message && <div className="mb-4 text-green-500">{message}</div>}
-                    <h1 className="text-center mb-4">Login</h1>
-                    <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-                        <div className="mb-4">
-                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
-                                Email
-                            </label>
-                            <input
-                                type="email"
-                                name="email"
-                                value={email}
-                                required
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="Enter email"
-                                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                            />
-                        </div>
-                        <div className="mb-6">
-                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
-                                Password
-                            </label>
-                            <input
-                                type="password"
-                                name="password"
-                                value={password}
-                                required
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="Enter password"
-                                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
-                            />
-                            {!password && (
-                                <p className="text-red-500 text-xs italic">Please choose a password.</p>
-                            )}
-                            <div className="flex items-center justify-between">
-                                <input type="submit" value="Log in" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" />
-                                <a className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800" href="#">
-                                    Forgot Password?
-                                </a>
+    <section className="h-screen">
+            <div className="container h-full px-6 py-24">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                    <div>
+                        {loggedOut && message && <div className="mb-4 text-green-500">{message}</div>}
+                        <h1 className="m-4 text-4xl font-bold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-blue-500">Log-in</h1>
+                        <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+                            <div className="mb-4">
+                                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
+                                    Email
+                                </label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={email}
+                                    required
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="Enter email"
+                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                />
                             </div>
-                        </div>
-                    </form>
+                            <div className="mb-6">
+                                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
+                                    Password
+                                </label>
+                                <input
+                                    type="password"
+                                    name="password"
+                                    value={password}
+                                    required
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="Enter password"
+                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+                                />
+                                {!password && (
+                                    <p className="text-red-500 text-xs italic">Please choose a password.</p>
+                                )}
+                                <div className="flex items-center justify-between">
+                                    <input type="submit" value="Log in" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" />
+                                    <a className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800" href="#">
+                                        Forgot Password?
+                                    </a>
+                                </div>
+                                <div className="my-4 flex items-center before:mt-0.5 before:flex-1 before:border-t before:border-neutral-300 after:mt-0.5 after:flex-1 after:border-t after:border-neutral-300">
+                                    <p className="mx-4 mb-0 text-center font-semibold dark:text-neutral-200">
+                                        OR
+                                    </p>
+                                </div>
+                                <TERipple rippleColor="light" className="w-full">
+                                    <a
+                                        className="mb-3 flex w-full items-center justify-center rounded bg-info px-7 pb-2.5 pt-3 text-center text-sm font-medium uppercase leading-normal text-white shadow-[0_4px_9px_-4px_#54b4d3] transition duration-150 ease-in-out hover:bg-info-600 hover:shadow-[0_8px_9px_-4px_rgba(84,180,211,0.3),0_4px_18px_0_rgba(84,180,211,0.2)] focus:bg-info-600 focus:shadow-[0_8px_9px_-4px_rgba(84,180,211,0.3),0_4px_18px_0_rgba(84,180,211,0.2)] focus:outline-none focus:ring-0 active:bg-info-700 active:shadow-[0_8px_9px_-4px_rgba(84,180,211,0.3),0_4px_18px_0_rgba(84,180,211,0.2)] dark:shadow-[0_4px_9px_-4px_rgba(84,180,211,0.5)] dark:hover:shadow-[0_8px_9px_-4px_rgba(84,180,211,0.2),0_4px_18px_0_rgba(84,180,211,0.1)] dark:focus:shadow-[0_8px_9px_-4px_rgba(84,180,211,0.2),0_4px_18px_0_rgba(84,180,211,0.1)] dark:active:shadow-[0_8px_9px_-4px_rgba(84,180,211,0.2),0_4px_18px_0_rgba(84,180,211,0.1)]"
+                                        style={{ backgroundColor: "#55acee" }}
+                                        href="#!"
+                                        role="button"
+                                    >
+                                        Continue with Google
+                                    </a>
+                                </TERipple>
+                            </div>
+                        </form>
+                    </div>
+                    <div className="hidden md:block">
+                        <img
+                            src="https://tecdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/draw2.svg"
+                            className="w-full"
+                            alt="Phone image"
+                        />
+                    </div>
                 </div>
             </div>
-
+        </section>
+            < Footer/>
         </>
     )
 }

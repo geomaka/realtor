@@ -62,8 +62,16 @@ function AdminSignupForm() {
 
   return (
     <>
+     <section className="h-screen flex flex-col md:flex-row justify-center space-y-10 md:space-y-0 md:space-x-16 items-center my-2 mx-5 md:mx-0 md:my-0">
+     <div className="md:w-1/3 max-w-sm">
+          <img
+            src="https://tecdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/draw2.webp"
+            alt="Sample image"
+          />
+        </div>
       <div className="flex justify-center items-center h-screen">
         <div className="w-full max-w-xs">
+        <h1 className="m-4 text-4xl font-bold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-blue-500">Landlord sign-in</h1>
           <form action="">
             <div className="mb-6">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
@@ -136,6 +144,7 @@ function AdminSignupForm() {
           </form>
         </div>
       </div>
+      </section>
     </>
   )
 }
