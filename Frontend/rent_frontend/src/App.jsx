@@ -11,6 +11,7 @@ import Account from './account';
 import PaymentsReceived from './paymentsRecieved';
 import TenantAccount from './tenantAccount';
 import TenantInfo from './tenantsInfo';
+import HomePage from './homePage';
 
 function App() {
 
@@ -18,7 +19,8 @@ function App() {
     <>
     <Router>
         <Routes>
-          <Route path = '/' element = {< AdminSignupForm />}/>
+          <Route path='/' element = {< HomePage />} />
+          <Route path = '/admin-signup' element = {< AdminSignupForm />}/>
           <Route path='/:landlordID/tenants' element = {< Tenants />} />
           <Route path='/:landlordID/utilities' element = {< Utilities />} />
           <Route path='/:landlordID/delete-utility/:utilityID' element ={< Utilities />} />
