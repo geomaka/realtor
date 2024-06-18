@@ -53,7 +53,7 @@ function Utilities() {
     e.preventDefault();
     const dataToBePosted = { rent, inputFields };
     let jsonData = JSON.stringify(dataToBePosted)
-    console.log(jsonData); // It's good practice to eventually remove console logs from production code.
+    console.log(jsonData);
     axios.post(`http://localhost:8000/rent/adminsignup/${landlordID}/add-utilities`, dataToBePosted)
       .then(response => {
         setUtilities(response.data.utilities)
@@ -138,7 +138,7 @@ function Utilities() {
             </div>
           </form>
           <div className="mb-4">
-            { total === 0 ? (<Link to="/tenants" className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800 cursor-not-allowed opacity-50">Done</Link>): (<Link to="/tenants" className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">Done</Link>)}
+            { total === 0 ? (<Link to={`/${landlordID}/tenants`} className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800 cursor-not-allowed opacity-50">Done</Link>): (<Link to={`/${landlordID}/tenants`} className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">Done</Link>)}
           </div>
         </div>
       </div>

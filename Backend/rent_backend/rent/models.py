@@ -45,7 +45,7 @@ class Utilities(models.Model):
     total = models.DecimalField(max_digits = 10, decimal_places = 2, default = 0)
 
     def __str__(self):
-        return f"{self.utility_name} {self.utility_cost}"
+        return f"{self.utility_name} {self.total}"
 
 
 class PaymentsReceived(models.Model):

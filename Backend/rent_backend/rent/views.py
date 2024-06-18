@@ -198,23 +198,26 @@ def payments(request, tenant_id):
     if request.method == "POST":
         try:
             tenant = Tenant.objects.get(pk=tenant_id)
-            utility = Utilities.objects.filter(landlord = tenant.landlord)
-            total_utility_cost = utility.aggregate(total_utility_cost=Sum('utility_cost'))['total_utility_cost']
-            total_rent = utility.aggregate(total_rent=Sum('rent'))['total_rent']
-            total = total_utility_cost + total_rent
-            print(total)
+            utilities = Utilities.objects.filter(landlord=tenant.landlord)
+
             data = json.loads(request.body)
-            amount_paid = data.get("amount")
-            balance = int(total) - int(amount_paid)
-            if get_dynamic_date():
-                balance+=total
+            amount_paid = int(data.get("amount", 0))
+
+            for utility in utilities:
+                total = utility.total
+                new_total = utility.total - amount_paid
+                utility.total = new_total
+                utility.save()
+
+            if timezone.now() == get_dynamic_date():
+                balance += total
             else:
-                balance = 0
-                
+                balance = new_total
+
             payment = Payments.objects.create(
                 landlord=tenant.landlord,
                 tenant=tenant,
-                amount=total,
+                amount=new_total,
                 paid=amount_paid,
                 balance=balance,
                 date_due=get_dynamic_date(),
@@ -222,22 +225,16 @@ def payments(request, tenant_id):
             )
 
             data = {
-                "landlord" : payment.landlord.first_name,
-                "name" : payment.tenant.first_name,
-                "amount" : payment.amount,
-                "paid" : payment.paid,
-                "balance" : payment.balance,
-                "date_due" : payment.date_due,
-                "date_paid" : payment.date_paid
+                "landlord": payment.landlord.first_name,
+                "name": payment.tenant.first_name,
+                "amount": payment.amount,
+                "paid": payment.paid,
+                "balance": payment.balance,
+                "date_due": payment.date_due,
+                "date_paid": payment.date_paid
             }
 
-            cl = MpesaClient()
-            phone_number = tenant.phone
-            amount = int(amount_paid)
-            account_reference = 'George Maina'
-            transaction_desc = 'Rent payment'
-            callback_url = 'https://api.darajambili.com/express-payment'
-            response = cl.stk_push(phone_number, amount, account_reference, transaction_desc, callback_url)
+            # Perform additional operations like MpesaClient integration here
 
             return JsonResponse({'success': True, 'data': data})
 
@@ -245,21 +242,29 @@ def payments(request, tenant_id):
             if 'payment' in locals():
                 payment.delete()
             return JsonResponse({'success': False, 'message': f"Error initiating payment: {str(e)}"}, status=500)
+
     else:
-        tenant = Tenant.objects.get(pk = tenant_id)
-        payments = Payments.objects.filter(tenant_id=tenant_id)
-        print(payments)
-        payments_data = []
-        for payment in payments:
-            payment_data = {
-                "name": tenant.first_name,
-                "landlord": tenant.landlord.first_name,
-                "paid": payment.paid,
-                "balance": payment.balance,
-                "date_paid": payment.date_paid
-            }
-            payments_data.append(payment_data)
-        return JsonResponse({'payments': payments_data}, safe=False)
+        try:
+            # Fetch all payments related to the tenant
+            tenant = Tenant.objects.get(pk=tenant_id)
+            payments = Payments.objects.filter(tenant_id=tenant_id)
+            payments_data = []
+
+            # Prepare payments data to return
+            for payment in payments:
+                payment_data = {
+                    "name": tenant.first_name,
+                    "landlord": tenant.landlord.first_name,
+                    "paid": payment.paid,
+                    "balance": payment.balance,
+                    "date_paid": payment.date_paid
+                }
+                payments_data.append(payment_data)
+
+            return JsonResponse({'payments': payments_data}, safe=False)
+
+        except Tenant.DoesNotExist:
+            return JsonResponse({'success': False, 'message': f"Tenant with id {tenant_id} does not exist"}, status=404)
 
 def payments_received(request, landlord_id):
     try:
@@ -319,7 +324,7 @@ def utilities(request, landlord_id):
             try:
                 with transaction.atomic():
                     total_rent = int(rent)
-                    total_utility_cost = 0  # Initialize total utility cost to 0
+                    total_utility_cost = 0
 
                     for item in data['inputFields']:
                         utility_name = item.get('utility_name')
