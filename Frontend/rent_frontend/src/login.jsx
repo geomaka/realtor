@@ -42,12 +42,12 @@ function Login() {
 
     return (
         <>
-    <section className="h-screen">
-            <div className="container h-full px-6 py-24">
+    <section className="h-screen flex items-center justify-center">
+            <div className="container max-w-screen-md px-6 py-12 md:py-24">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                     <div>
                         {loggedOut && message && <div className="mb-4 text-green-500">{message}</div>}
-                        <h1 className="m-4 text-4xl font-bold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-blue-500">Log-in</h1>
+                        <h1 className="m-4 text-3xl md:text-5xl font-bold leading-none tracking-tight text-gray-900 dark:text-blue-500">Log-in</h1>
                         <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
                             <div className="mb-4">
                                 <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
