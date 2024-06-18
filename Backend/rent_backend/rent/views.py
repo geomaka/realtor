@@ -234,8 +234,6 @@ def payments(request, tenant_id):
                 "date_paid": payment.date_paid
             }
 
-            # Perform additional operations like MpesaClient integration here
-
             return JsonResponse({'success': True, 'data': data})
 
         except Exception as e:
@@ -245,12 +243,10 @@ def payments(request, tenant_id):
 
     else:
         try:
-            # Fetch all payments related to the tenant
             tenant = Tenant.objects.get(pk=tenant_id)
             payments = Payments.objects.filter(tenant_id=tenant_id)
             payments_data = []
 
-            # Prepare payments data to return
             for payment in payments:
                 payment_data = {
                     "name": tenant.first_name,
