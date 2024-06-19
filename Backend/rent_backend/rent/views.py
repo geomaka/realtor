@@ -5,6 +5,7 @@ from django.core import serializers
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse,HttpResponseRedirect,JsonResponse
 from django.shortcuts import render
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from .models import Tenant,Landlord,Payments,Utilities,PaymentsReceived
 from datetime import datetime
@@ -19,6 +20,13 @@ from django.contrib.auth import login as auth_login
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login as auth_login
 from rest_framework.authtoken.models import Token
+from django.core.mail import send_mail
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes,force_str
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.contrib.contenttypes.models import ContentType
+
 
 # Create your views here.
 def index(request):
@@ -158,7 +166,83 @@ def login(request):
     
     else:
         return JsonResponse({'error': 'Method not allowed'}, status=405)
-        
+
+def send_reset_email(user, token, uid, request):
+    content_type = ContentType.objects.get_for_model(user)
+    reset_url = f"http://localhost:5173/login/reset-password/{uid}/{token}"
+
+    email_subject = 'Password Reset Request'
+    email_body = f'''
+    Hi {user.first_name},
+
+    You requested a password reset. Click the link below to reset your password:
+    {reset_url}
+
+    If you didn't request this, please ignore this email.
+    '''
+    send_mail(email_subject, email_body, 'noreply@example.com', [user.email])
+
+class CustomTokenGenerator(PasswordResetTokenGenerator):
+    def _make_hash_value(self, user, timestamp):
+        return str(user.pk) + str(timestamp)
+
+token_generator = CustomTokenGenerator()
+
+
+def forgot_password(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        email = data.get('email')
+
+        landlord = Landlord.objects.filter(email=email).first()
+        tenant = Tenant.objects.filter(email=email).first()
+
+        if landlord:
+            user = landlord
+        elif tenant:
+            user = tenant
+        else:
+            return JsonResponse({"error": "User with this email does not exist."}, status=400)
+
+        user.last_login = None
+        user.save()
+
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = token_generator.make_token(user)
+
+        send_reset_email(user, token, uid, request)
+
+        return JsonResponse({"message": "Password reset link has been sent to your email."}, status=200)
+
+def reset_password(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        uidb64 = data.get('uid')
+        token = data.get('token')
+        password = data.get('password')
+
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            content_type = ContentType.objects.get_for_model(Landlord) or ContentType.objects.get_for_model(Tenant)  # or Tenant
+            user_model = content_type.model_class()
+            user = get_object_or_404(user_model, pk=uid)
+            if token_generator.check_token(user, token):
+                if password:
+                    user.password = make_password(password)
+                    user.save()
+                    return JsonResponse({"message": "Password has been reset successfully."}, status=200)
+                else:
+                    return JsonResponse({"error": "Passwords do not match."}, status=400)
+            else:
+                return JsonResponse({"error": "Invalid or expired reset link."}, status=400)
+        except ContentType.DoesNotExist:
+            return JsonResponse({"error": "Content type not found."}, status=500)
+        except user_model.DoesNotExist:
+            return JsonResponse({"error": "User not found."}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": f"An error occurred: {e}"}, status=500)
+    else:
+        return JsonResponse({"error": "Method not allowed"}, status=405)
 
 def tenants(request):
     tenants = list(Tenant.objects.all().values())

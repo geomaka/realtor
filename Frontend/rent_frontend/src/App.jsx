@@ -12,6 +12,8 @@ import PaymentsReceived from './paymentsRecieved';
 import TenantAccount from './tenantAccount';
 import TenantInfo from './tenantsInfo';
 import HomePage from './homePage';
+import ForgotPassword from './forgotPassword';
+import ResetPassword from './resetPassword';
 
 function App() {
 
@@ -32,6 +34,8 @@ function App() {
           <Route path='/:tenantID/payments' element = {< Payments />} />
           <Route path='/:tenantID/my-account' element = {< TenantAccount />} />
           <Route path='/login' element = {< Login />} />
+          <Route path='/login/forgot-password' element = {< ForgotPassword />} />
+          <Route path='/login/reset-password/:uid/:token' element = {< ResetPassword />} />
         </Routes>
     </Router>
 

@@ -1,6 +1,19 @@
 from django.db import models
+from django.utils import timezone
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
 
 # Create your models here.
+class PasswordResetToken(models.Model):
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    user = GenericForeignKey('content_type', 'object_id')
+    token = models.CharField(max_length=100)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"Reset token for {self.user}"
+
 class Landlord(models.Model):
     first_name = models.CharField(max_length =64)
     last_name = models.CharField(max_length = 64)
