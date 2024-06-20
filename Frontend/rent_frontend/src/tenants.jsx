@@ -12,7 +12,7 @@ function Tenants() {
   useEffect(() => {
     const fetchTenants = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/rent/tenants");
+        const response = await fetch(`http://127.0.0.1:8000/rent/${landlordID}/tenants`);
         const tenants = await response.json();
         setTenants(tenants.tenants);
         console.log(tenants);

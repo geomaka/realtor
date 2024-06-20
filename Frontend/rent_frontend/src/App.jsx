@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css'
 import AdminSignupForm from './adminSignup'
 import Tenants from './tenants'
@@ -15,24 +15,26 @@ import HomePage from './homePage';
 import ForgotPassword from './forgotPassword';
 import ResetPassword from './resetPassword';
 
-function App() {
 
+function App() {
+  const isauthenticated = localStorage.getItem('accessToken')
+  
   return (
     <>
     <Router>
         <Routes>
           <Route path='/' element = {< HomePage />} />
           <Route path = '/admin-signup' element = {< AdminSignupForm />}/>
-          <Route path='/:landlordID/tenants' element = {< Tenants />} />
-          <Route path='/:landlordID/utilities' element = {< Utilities />} />
-          <Route path='/:landlordID/delete-utility/:utilityID' element ={< Utilities />} />
-          <Route path='/:landlordID/account' element = {<Account/>}/>
-          <Route path='/:landlordID/payments-received' element = {<PaymentsReceived/>}/>
-          <Route path='/:landlordID/tenant-info/:tenantID' element = {< TenantInfo />}/>
+          <Route path='/:landlordID/tenants' element = {isauthenticated ? < Tenants /> : <Navigate to={'/login'} replace />} />
+          <Route path='/:landlordID/utilities' element = { isauthenticated ? < Utilities />: <Navigate to={'/login'} replace />} />
+          <Route path='/:landlordID/delete-utility/:utilityID' element ={isauthenticated ?< Utilities /> : <Navigate to={'/login'} replace />} />
+          <Route path='/:landlordID/account' element = {isauthenticated ? <Account/> : <Navigate to={'/login'} replace />}/>
+          <Route path='/:landlordID/payments-received' element = {isauthenticated ? <PaymentsReceived/> : <Navigate to={'/login'} replace />}/>
+          <Route path='/:landlordID/tenant-info/:tenantID' element = {isauthenticated ? < TenantInfo /> : <Navigate to={'/login'} replace />}/>
           <Route path='/signup' element = {< SignUp />} />
-          <Route path='/:tenantID' element ={< Tenant />} />
-          <Route path='/:tenantID/payments' element = {< Payments />} />
-          <Route path='/:tenantID/my-account' element = {< TenantAccount />} />
+          <Route path='/:tenantID' element ={isauthenticated ? < Tenant /> : <Navigate to={'/login'} replace />} />
+          <Route path='/:tenantID/payments' element = {isauthenticated ? < Payments /> : <Navigate to={'/login'} replace /> } />
+          <Route path='/:tenantID/my-account' element = {isauthenticated ? < TenantAccount /> : <Navigate to={'/login'} replace />} />
           <Route path='/login' element = {< Login />} />
           <Route path='/login/forgot-password' element = {< ForgotPassword />} />
           <Route path='/login/reset-password/:uid/:token' element = {< ResetPassword />} />

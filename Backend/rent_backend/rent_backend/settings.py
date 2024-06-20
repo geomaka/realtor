@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'allauth',
     'rest_framework',
     'rest_framework.authtoken',
+    'rest_framework_simplejwt',
     'corsheaders',
     'django_daraja',
     'rent',
@@ -60,6 +61,24 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10080),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+}
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
@@ -144,17 +163,10 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 
-SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'SCOPE': [
-            'profile',
-            'email',
-        ],
-        'AUTH_PARAMS': {
-            'access_type': 'online',
-        }
-    }
-}
+
+
+# URL where users are redirected after login
+LOGIN_REDIRECT_URL = '/'
 
 SOCIALACCOUNT_GOOGLE_CLIENT_ID = 'your_client_id'
 SOCIALACCOUNT_GOOGLE_SECRET = 'your_client_secret'

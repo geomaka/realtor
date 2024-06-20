@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { TEInput, TERipple } from "tw-elements-react";
 import Footer from "./Components/footer";
@@ -8,7 +8,6 @@ function Login() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const { loggedOut, message } = location.state || {};
-
     const navigate = useNavigate()
 
     const handleSubmit = (e) => {
@@ -26,6 +25,9 @@ function Login() {
         })
             .then((res) => res.json())
             .then((data) => {
+                if(data.status === 'success'){
+                    localStorage.setItem('accessToken', data.access);
+                }
                 if (data.role == 'landlord') {
                     let id = data.landlordID
                     navigate(`/${id}/tenants`)
@@ -37,7 +39,7 @@ function Login() {
             })
             .catch((error) => {
                 console.log(error)
-            })
+            }) 
     }
 
     return (
@@ -80,7 +82,7 @@ function Login() {
                                     <p className="text-red-500 text-xs italic">Please choose a password.</p>
                                 )}
                                 <div className="flex items-center justify-between">
-                                    <input type="submit" value="Log in" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" />
+                                    <input type="submit" value="Log in" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"/>
                                     <Link to={'/login/forgot-password'} className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800" href="#">
                                         Forgot Password?
                                     </Link>
@@ -91,14 +93,14 @@ function Login() {
                                     </p>
                                 </div>
                                 <TERipple rippleColor="light" className="w-full">
-                                    <a
+                                    <Link to={'/'}
                                         className="mb-3 flex w-full items-center justify-center rounded bg-info px-7 pb-2.5 pt-3 text-center text-sm font-medium uppercase leading-normal text-white shadow-[0_4px_9px_-4px_#54b4d3] transition duration-150 ease-in-out hover:bg-info-600 hover:shadow-[0_8px_9px_-4px_rgba(84,180,211,0.3),0_4px_18px_0_rgba(84,180,211,0.2)] focus:bg-info-600 focus:shadow-[0_8px_9px_-4px_rgba(84,180,211,0.3),0_4px_18px_0_rgba(84,180,211,0.2)] focus:outline-none focus:ring-0 active:bg-info-700 active:shadow-[0_8px_9px_-4px_rgba(84,180,211,0.3),0_4px_18px_0_rgba(84,180,211,0.2)] dark:shadow-[0_4px_9px_-4px_rgba(84,180,211,0.5)] dark:hover:shadow-[0_8px_9px_-4px_rgba(84,180,211,0.2),0_4px_18px_0_rgba(84,180,211,0.1)] dark:focus:shadow-[0_8px_9px_-4px_rgba(84,180,211,0.2),0_4px_18px_0_rgba(84,180,211,0.1)] dark:active:shadow-[0_8px_9px_-4px_rgba(84,180,211,0.2),0_4px_18px_0_rgba(84,180,211,0.1)]"
                                         style={{ backgroundColor: "#55acee" }}
                                         href="#!"
                                         role="button"
                                     >
-                                        Continue with Google
-                                    </a>
+                                        Create an account
+                                    </Link>
                                 </TERipple>
                             </div>
                         </form>

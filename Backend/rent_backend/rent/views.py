@@ -26,7 +26,8 @@ from django.utils.encoding import force_bytes,force_str
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.contenttypes.models import ContentType
-
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 # Create your views here.
 def index(request):
@@ -72,7 +73,6 @@ def adminsignup(request):
 def signup(request):
     if request.method == "POST":
         data = json.loads(request.body)
-        print(data)
         house_number = data.get("house_number")
         first_name = data.get("first_name")
         last_name = data.get("last_name")
@@ -97,7 +97,7 @@ def signup(request):
     else:
         landlords = Landlord.objects.all().values("id", "first_name", "last_name")
         return JsonResponse({"landlords": list(landlords)})
-        
+
 
 
 def login(request):
@@ -113,48 +113,33 @@ def login(request):
             try:
                 landlord = Landlord.objects.get(email=email)
                 if check_password(password, landlord.password):
-                    user, created = User.objects.get_or_create(username=landlord.email, defaults={"password": password})
-                    if created:
-                        user.set_password(password)
-                        user.save()
-                    
-                    user.backend = 'django.contrib.auth.backends.ModelBackend' 
-
                     user = authenticate(request, username=landlord.email, password=password)
+                    
                     if user is not None:
-                        auth_login(request, user)
-                        
-                        token, _ = Token.objects.get_or_create(user=user)
-                        
+                        refresh = RefreshToken.for_user(user)
                         return JsonResponse({
                             'status': 'success',
                             'role': 'landlord',
                             'landlordID': landlord.id,
-                            'token': token.key
+                            'access': str(refresh.access_token),
+                            'refresh': str(refresh),
                         })
-
                 return JsonResponse({'error': 'Invalid login details'}, status=401)
 
             except Landlord.DoesNotExist:
                 try:
                     tenant = Tenant.objects.get(email=email)
                     if check_password(password, tenant.password):
-                        user, created = User.objects.get_or_create(username=tenant.email, defaults={"password": password})
-                        if created:
-                            user.set_password(password)
-                            user.save()
-                        
-                        user.backend = 'django.contrib.auth.backends.ModelBackend'  # Use the appropriate backend
-
                         user = authenticate(request, username=tenant.email, password=password)
+                        
                         if user is not None:
-                            token, _ = Token.objects.get_or_create(user=user)
-                            
+                            refresh = RefreshToken.for_user(user)
                             return JsonResponse({
                                 'status': 'success',
                                 'role': 'tenant',
                                 'tenantID': tenant.house_number,
-                                'token': token.key
+                                'access': str(refresh.access_token),
+                                'refresh': str(refresh),
                             })
                     return JsonResponse({'error': 'Invalid login details'}, status=401)
 
@@ -244,9 +229,15 @@ def reset_password(request):
     else:
         return JsonResponse({"error": "Method not allowed"}, status=405)
 
-def tenants(request):
-    tenants = list(Tenant.objects.all().values())
-    return JsonResponse({'tenants': tenants})
+def tenants(request,landlord_id):
+    try:
+        landlord = Landlord.objects.get(id=landlord_id)
+        tenants = list(Tenant.objects.filter(landlord=landlord).values())
+        return JsonResponse({'tenants' : tenants})
+
+    except Landlord.DoesNotExist:
+        return JsonResponse({'error' 'landlord not found'},status = 404)
+
 
 def tenant_detail(request, tenant_id):
     try:
