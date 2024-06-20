@@ -7,6 +7,7 @@ function AdminSignupForm() {
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  // const [property, setProperty] = useState('')
   const navigate = useNavigate()
   // const [csrfToken, setCsrfToken] = useState('');
 
@@ -30,6 +31,7 @@ function AdminSignupForm() {
 
   const createUser = (e) => {
     e.preventDefault();
+    // const propertyData = {property}
     const data = {
       first_name,
       last_name,

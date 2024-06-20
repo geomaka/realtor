@@ -7,7 +7,7 @@ from django.http import HttpResponse,HttpResponseRedirect,JsonResponse
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from .models import Tenant,Landlord,Payments,Utilities,PaymentsReceived
+from .models import Tenant,Landlord,Payments,Utilities,PaymentsReceived, Property,PropertyDetails
 from datetime import datetime
 from django_daraja.mpesa.core import MpesaClient
 from django.utils import timezone
@@ -98,7 +98,75 @@ def signup(request):
         landlords = Landlord.objects.all().values("id", "first_name", "last_name")
         return JsonResponse({"landlords": list(landlords)})
 
+def property(request,landlord_id):
+    if request.method == "POST":
+        try:
+            landlord = Landlord.objects.get(id=landlord_id)
+            data = json.loads(request.body)
+            property_name = data.get('property_name')
+            print(data)
 
+            if property_name:
+                new_property = Property.objects.create(landlord = landlord, property_name = property_name)
+                property_data = {"property_name" : property_name, "landlord": new_property.landlord.id}
+
+                return JsonResponse({"property" : property_data})
+            else:
+                return JsonResponse({'error' : "an error has occured"})
+
+        except Landlord.DoesNotExist:
+            return JsonResponse({'error' : "landlord not found"})
+
+def property_details(request, landlord_id, property_id):
+    if request.method == "POST":
+        try:
+            landlord = Landlord.objects.get(id=landlord_id)
+            property = Property.objects.get(id=property_id)
+        except Landlord.DoesNotExist or Property.DoesNotExist:
+            return JsonResponse({"error":"Does not exist"},status =  404)
+
+        data = json.loads(request.body)
+        number_of_houses = data.get('number_of_houses')
+        number_of_1_bedroom_houses =data.get('number_of_1_bedroom_houses')
+        number_of_2_bedroom_houses = data.get('number_of_2_bedroom_houses')
+        number_of_3_bedroom_houses = data.get('number_of_3_bedroom_houses')
+        number_of_4_bedroom_houses = data.get('number_of_4_bedroom_houses')
+
+        base_rent_1_bedroom = data.get('base_rent_1_bedroom')
+        base_rent_2_bedroom = data.get('base_rent_2_bedroom')
+        base_rent_3_bedroom = data.get('base_rent_3_bedroom')
+        base_rent_4_bedroom = data.get('base_rent_4_bedroom')
+
+        if number_of_houses:
+            property_details = PropertyDetails.objects.create(
+                property = property,
+                number_of_houses = number_of_houses,
+                number_of_1_bedroom_houses = number_of_1_bedroom_houses,
+                number_of_2_bedroom_houses = number_of_2_bedroom_houses,
+                number_of_3_bedroom_houses = number_of_3_bedroom_houses,
+                number_of_4_bedroom_houses = number_of_4_bedroom_houses,
+                base_rent_1_bedroom = base_rent_1_bedroom,
+                base_rent_2_bedroom = base_rent_2_bedroom,
+                base_rent_3_bedroom = base_rent_3_bedroom,
+                base_rent_4_bedroom = base_rent_4_bedroom
+            )
+
+            property_details_data = {
+                    "Number of houses": property_details.number_of_houses,
+                    "Number of 1 bedroom": property_details.number_of_1_bedroom_houses,
+                    "Number of 2 bedroom": property_details.number_of_2_bedroom_houses,
+                    "Number of 3 bedroom": property_details.number_of_3_bedroom_houses,
+                    "Number of 4 bedroom": property_details.number_of_4_bedroom_houses,
+                    "Rent 1 bedroom": property_details.base_rent_1_bedroom,
+                    "Rent 2 bedroom": property_details.base_rent_2_bedroom,
+                    "Rent 3 bedroom": property_details.base_rent_3_bedroom,
+                    "Rent 4 bedroom": property_details.base_rent_4_bedroom,
+                    "property": property_details.property.id
+                }
+
+        return JsonResponse({"Property_details" : property_details_data},status=201)
+    else:
+        return JsonResponse({"Error" : "invalid method"},status=405)
 
 def login(request):
     if request.method == "POST":
@@ -113,9 +181,17 @@ def login(request):
             try:
                 landlord = Landlord.objects.get(email=email)
                 if check_password(password, landlord.password):
+                    user, created = User.objects.get_or_create(username=landlord.email, defaults={"password": password})
+
+                    if created:
+                        user.set_password(password)
+                        user.save()
+                
+                    user.backend = 'django.contrib.auth.backends.ModelBackend'
+
                     user = authenticate(request, username=landlord.email, password=password)
-                    
                     if user is not None:
+                        auth_login(request,user)
                         refresh = RefreshToken.for_user(user)
                         return JsonResponse({
                             'status': 'success',
@@ -131,8 +207,9 @@ def login(request):
                     tenant = Tenant.objects.get(email=email)
                     if check_password(password, tenant.password):
                         user = authenticate(request, username=tenant.email, password=password)
-                        
+                        print(user)
                         if user is not None:
+                            login(request,user)
                             refresh = RefreshToken.for_user(user)
                             return JsonResponse({
                                 'status': 'success',

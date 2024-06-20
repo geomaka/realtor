@@ -25,14 +25,23 @@ class Landlord(models.Model):
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
+class Property(models.Model):
+    landlord = models.ForeignKey(Landlord, on_delete=models.CASCADE, related_name='properties')
+    property_name = models.CharField(max_length=100) 
+
+    def __str__(self):
+        return self.property_name
+
 class Tenant(models.Model):
     landlord = models.ForeignKey(Landlord, on_delete = models.CASCADE)
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='tenants')
     house_number = models.CharField(max_length = 10, primary_key=True)
     first_name = models.CharField(max_length = 64)
     last_name = models.CharField(max_length = 64)
     email = models.EmailField(max_length = 64, unique = True)
     phone = models.CharField(max_length = 10)
     password = models.CharField(max_length = 128)
+    date_moved_in = models.DateTimeField()
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
@@ -59,6 +68,24 @@ class Utilities(models.Model):
 
     def __str__(self):
         return f"{self.utility_name} {self.total}"
+
+class PropertyDetails(models.Model):
+    property = models.OneToOneField(Property, on_delete=models.CASCADE, related_name='details')
+    number_of_houses = models.IntegerField()
+    number_of_1_bedroom_houses = models.IntegerField(default=0)
+    number_of_2_bedroom_houses = models.IntegerField(default=0)
+    number_of_3_bedroom_houses = models.IntegerField(default=0)
+    number_of_4_bedroom_houses = models.IntegerField(default=0)
+    
+    base_rent_1_bedroom = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    base_rent_2_bedroom = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    base_rent_3_bedroom = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    base_rent_4_bedroom = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    utilities = models.ManyToManyField(Utilities, related_name='properties')
+
+    def __str__(self):
+        return f"Details for {self.property.property_name}"
 
 
 class PaymentsReceived(models.Model):
