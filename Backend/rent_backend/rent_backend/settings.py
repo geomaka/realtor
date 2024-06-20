@@ -179,12 +179,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # The Mpesa environment to use
 # Possible values: sandbox, production
 
+from decouple import config
+
 MPESA_ENVIRONMENT = 'sandbox'
 
 # Credentials for the daraja app
 
-MPESA_CONSUMER_KEY = 'UCwAqGf1CEtHMJwqDArtosV7Ufpqzq8CFu4VCZMI3Limrsqd'
-MPESA_CONSUMER_SECRET = 'xkFUC4NsE8DKdRPS2dfrKzAwogSvD1PTV10SjbgTeYMzqP20iA4qa6AudFH2TA2G'
+MPESA_CONSUMER_KEY = config('MPESA_CONSUMER_KEY')
+MPESA_CONSUMER_SECRET = config('MPESA_CONSUMER_SECRET')
 
 #Shortcode to use for transactions. For sandbox  use the Shortcode 1 provided on test credentials page
 
@@ -206,7 +208,7 @@ MPESA_SHORTCODE_TYPE = 'paybill'
 # Sandbox passkey is available on test credentials page
 # Production passkey is sent via email once you go live
 
-MPESA_PASSKEY = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919'
+MPESA_PASSKEY = config('MPESA_PASSKEY')
 
 # Username for initiator (to be used in B2C, B2B, AccountBalance and TransactionStatusQuery Transactions)
 
@@ -223,8 +225,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'      # Example: 'smtp.gmail.com'
 EMAIL_PORT = 587                    # Example: 587 for TLS
 EMAIL_USE_TLS = True                # Use TLS (Transport Layer Security)
-EMAIL_HOST_USER = 'gkaranja994@gmail.com'  # Your email address
-EMAIL_HOST_PASSWORD = 'rkee gjzg retu zhje'  # Your email password or app-specific password
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')  # Your email address
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')  # Your email password or app-specific password
 
 # Optionally, configure the default email address for sending emails
 DEFAULT_FROM_EMAIL = 'your_email@example.com'
