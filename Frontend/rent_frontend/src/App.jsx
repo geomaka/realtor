@@ -14,6 +14,7 @@ import TenantInfo from './tenantsInfo';
 import HomePage from './homePage';
 import ForgotPassword from './forgotPassword';
 import ResetPassword from './resetPassword';
+import PropertyName from './propertyName';
 
 
 function App() {
@@ -26,7 +27,8 @@ function App() {
           <Route path='/' element = {< HomePage />} />
           <Route path = '/admin-signup' element = {< AdminSignupForm />}/>
           <Route path='/:landlordID/tenants' element = {isauthenticated ? < Tenants /> : <Navigate to={'/login'} replace />} />
-          <Route path='/:landlordID/utilities' element = { isauthenticated ? < Utilities />: <Navigate to={'/login'} replace />} />
+          <Route path='/:landlordID/:propertyID/utilities' element = { isauthenticated ? < Utilities />: <Navigate to={'/login'} replace />} />
+          <Route path='/:landlordID/property' element = {isauthenticated ? < PropertyName/> : <Navigate to={'/login'} replace />} />
           <Route path='/:landlordID/delete-utility/:utilityID' element ={isauthenticated ?< Utilities /> : <Navigate to={'/login'} replace />} />
           <Route path='/:landlordID/account' element = {isauthenticated ? <Account/> : <Navigate to={'/login'} replace />}/>
           <Route path='/:landlordID/payments-received' element = {isauthenticated ? <PaymentsReceived/> : <Navigate to={'/login'} replace />}/>

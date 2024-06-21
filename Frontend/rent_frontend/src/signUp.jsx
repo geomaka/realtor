@@ -8,12 +8,13 @@ function SignUp() {
   const [first_name, setFirst] = useState('')
   const [last_name, setLast] = useState('')
   const [phone, setPhone] = useState('')
+  const [date_moved_in, setDate] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
   const navigate = useNavigate()
 
-
+  
   const fetchLandlords = async () => {
     let response = await fetch("http://localhost:8000/rent/signup")
     let data = await response.json()
@@ -34,7 +35,8 @@ function SignUp() {
       phone,
       email,
       password,
-      house_number
+      house_number,
+      date_moved_in
     }
 
     fetch("http://localhost:8000/rent/signup", {
@@ -117,6 +119,19 @@ function SignUp() {
                   onChange={(e) => setPhone(e.target.value)}
                   name="phone"
                   placeholder="Enter phone"
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+              </div>
+              <div className="mb-6">
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
+                  Date moved in
+                </label>
+                <input
+                  type="date"
+                  value={date_moved_in}
+                  required
+                  onChange={(e) => setDate(e.target.value)}
+                  name="date_moved_in"
+                  placeholder="Enter Date moved in"
                   className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
               </div>
               <div className="mb-6">

@@ -54,7 +54,7 @@ function AdminSignupForm() {
       })
       .then((data) => {
         let id = data.landlord_id
-        navigate(`/${id}/utilities`)
+        navigate(`/${id}/property`)
         console.log(id)
       })
       .catch(error => {
