@@ -81,10 +81,11 @@ def signup(request):
         phone = data.get("phone")
         password = data.get("password")
         landlord_id = data.get("landlord_id")
-
+        property_id = data.get("property_id")
+ 
         if first_name and last_name and phone and email and password and landlord_id and house_number and date_moved_in:
             hashed_password = make_password(password)
-            tenant = Tenant.objects.create(house_number=house_number, first_name=first_name, last_name=last_name, phone=phone, email=email, date_moved_in = date_moved_in, password=hashed_password, landlord_id=landlord_id)
+            tenant = Tenant.objects.create(house_number=house_number, first_name=first_name, last_name=last_name, phone=phone, email=email, date_moved_in = date_moved_in, password=hashed_password, landlord_id=landlord_id, property_id = property_id)
             data = {
                 "first_name" : tenant.first_name,
                 "last_name" : tenant.last_name,
@@ -211,11 +212,20 @@ def login(request):
                 try:
                     tenant = Tenant.objects.get(email=email)
                     if check_password(password, tenant.password):
+                        user, created = User.objects.get_or_create(username=tenant.email, defaults={"password": password})
+
+                        if created:
+                            user.set_password(password)
+                            user.save()
+                
+                        user.backend = 'django.contrib.auth.backends.ModelBackend'
+
                         user = authenticate(request, username=tenant.email, password=password)
                         print(user)
                         if user is not None:
-                            login(request,user)
+                            auth_login(request,user)
                             refresh = RefreshToken.for_user(user)
+
                             return JsonResponse({
                                 'status': 'success',
                                 'role': 'tenant',
@@ -360,28 +370,44 @@ def payments(request, tenant_id):
             data = json.loads(request.body)
             amount_paid = int(data.get("amount", 0))
 
-            for utility in utilities:
-                total = utility.total
-                new_total = utility.total - amount_paid
-                utility.total = new_total
-                utility.save()
+            total_amount = sum([utility.total for utility in utilities])
 
-            if timezone.now() == get_dynamic_date():
-                balance += total
+            for utility in utilities:
+                if amount_paid > 0:
+                    if utility.total <= amount_paid:
+                        amount_paid -= utility.total
+                        utility.total = 0
+                    else:
+                        utility.total -= amount_paid
+                        amount_paid = 0
+                    utility.save()
+
+            new_balance = sum([utility.total for utility in utilities])
+
+            if timezone.now().date() == get_dynamic_date().date():
+                balance = total_amount
             else:
-                balance = new_total
+                balance = new_balance
 
             payment = Payments.objects.create(
                 landlord=tenant.landlord,
                 tenant=tenant,
-                amount=new_total,
-                paid=amount_paid,
+                amount=new_balance,  
+                paid=total_amount - new_balance, 
                 balance=balance,
                 date_due=get_dynamic_date(),
                 date_paid=timezone.now()
             )
 
-            data = {
+            cl = MpesaClient()
+            phone_number = tenant.phone  
+            amount = int(payment.paid)
+            account_reference = f"Payment for {tenant.first_name} {tenant.last_name}"
+            transaction_desc = f"Utility payment for {tenant.house_number}"
+            callback_url = 'https://api.darajambili.com/express-payment'
+            response = cl.stk_push(phone_number, amount, account_reference, transaction_desc, callback_url)
+
+            response_data = {
                 "landlord": payment.landlord.first_name,
                 "name": payment.tenant.first_name,
                 "amount": payment.amount,
@@ -391,8 +417,11 @@ def payments(request, tenant_id):
                 "date_paid": payment.date_paid
             }
 
-            return JsonResponse({'success': True, 'data': data})
+            return JsonResponse({'success': True, 'data': response_data, 'mpesa_response': response.json()})
 
+        except Tenant.DoesNotExist:
+            return JsonResponse({'success': False, 'message': f"Tenant with id {tenant_id} does not exist"}, status=404)
+        
         except Exception as e:
             if 'payment' in locals():
                 payment.delete()
