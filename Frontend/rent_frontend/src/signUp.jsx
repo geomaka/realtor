@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Footer from "./Components/footer";
+import Property from "./property";
 
 function SignUp() {
   const [landlords, setLandlords] = useState([])
@@ -12,16 +13,28 @@ function SignUp() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [selectedLandlordId, setSelectedLandlordId] = useState("");
+  const [properties, setProperties] = useState([])
+  const [propertyID,setPropertyID] = useState('')
 
 
   const navigate = useNavigate()
+
+  const handleSelection = (event) => {
+    const selectedValue = event.target.value;
+    const [landlordId, propertyId] = selectedValue.split('-');
+    setSelectedLandlordId(landlordId)
+    setPropertyID(propertyId)
+  }
 
 
   const fetchLandlords = async () => {
     let response = await fetch("http://localhost:8000/rent/signup")
     let data = await response.json()
     setLandlords(data.landlords)
-    console.log(data.landlords)
+    for (let i = 0; i <= landlords.length; i++) {
+      console.log(data.landlords[i].properties)
+      setProperties(data.landlords[i].properties)
+    }
   }
 
   useEffect(() => {
@@ -31,7 +44,8 @@ function SignUp() {
   const handleSubmit = (e) => {
     e.preventDefault()
     let dataToBePosted = {
-      landlord_id: selectedLandlordId,
+      property_id  : propertyID ,
+      landlord_id : selectedLandlordId,
       first_name,
       last_name,
       phone,
@@ -169,12 +183,15 @@ function SignUp() {
                   id="landlordSelect"
                   name="landlord_id"
                   className="rounded focus:outline-none focus:shadow-outline"
-                  value={selectedLandlordId}
-                  onChange={(e) => {setSelectedLandlordId(e.target.value)}}
+                  onChange={handleSelection}
                 >
                   <option value="">Select a landlord</option>
                   {landlords.map(landlord => (
-                    <option key={landlord.id} value={landlord.id}>{landlord.first_name} {landlord.last_name}</option>
+                    landlord.properties.map(property => (
+                      <option key={`${property.id}-${landlord.id}`} value={`${landlord.id}-${property.id}`}>
+                        {`${landlord.first_name} ${landlord.last_name} - ${property.address}`}
+                      </option>
+                    ))
                   ))}
                 </select>
               </div >

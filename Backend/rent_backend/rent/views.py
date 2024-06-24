@@ -82,10 +82,18 @@ def signup(request):
         password = data.get("password")
         landlord_id = data.get("landlord_id")
         property_id = data.get("property_id")
+
+        print(data)
+
+        try:
+            properties = Property.objects.get(pk=property_id)
+
+        except Property.DoesNotExist:
+            print("Does not exist")
  
         if first_name and last_name and phone and email and password and landlord_id and house_number and date_moved_in:
             hashed_password = make_password(password)
-            tenant = Tenant.objects.create(house_number=house_number, first_name=first_name, last_name=last_name, phone=phone, email=email, date_moved_in = date_moved_in, password=hashed_password, landlord_id=landlord_id, property_id = property_id)
+            tenant = Tenant.objects.create(house_number=house_number, first_name=first_name, last_name=last_name, phone=phone, email=email, date_moved_in = date_moved_in, password=hashed_password, landlord_id=landlord_id, property_id=property_id)
             data = {
                 "first_name" : tenant.first_name,
                 "last_name" : tenant.last_name,
@@ -97,8 +105,23 @@ def signup(request):
         else:
             return JsonResponse({"success": False, "message": "Fill all the fields"})
     else:
-        landlords = Landlord.objects.all().values("id", "first_name", "last_name")
-        return JsonResponse({"landlords": list(landlords)})
+        landlords = Landlord.objects.prefetch_related('properties').all()
+        landlords_data = []
+        for landlord in landlords:
+            properties_data = []
+            for property in landlord.properties.all():
+                properties_data.append({
+                    'id': property.id,
+                    'address': property.property_name,
+                })
+
+        landlords_data.append({
+                'id': landlord.id,
+                'first_name': landlord.first_name,
+                'last_name': landlord.last_name,
+                'properties': properties_data,
+            })
+        return JsonResponse({"landlords": landlords_data})
 
 def property(request,landlord_id):
     if request.method == "POST":
