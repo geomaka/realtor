@@ -119,6 +119,16 @@ def property(request,landlord_id):
         except Landlord.DoesNotExist:
             return JsonResponse({'error' : "landlord not found"})
 
+    else:
+        properties = Property.objects.filter(landlord_id=landlord_id).values()
+        landlord = Landlord.objects.get(pk = landlord_id)
+        landlord_data = {
+            "id": landlord.id,
+            "first_name" : landlord.first_name,
+            "last_name" : landlord.last_name
+        }
+        return JsonResponse({"properties" : list(properties),"landlord" : landlord_data})
+
 def property_details(request, landlord_id, property_id):
     if request.method == "POST":
         try:

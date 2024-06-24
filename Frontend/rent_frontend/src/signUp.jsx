@@ -11,15 +11,17 @@ function SignUp() {
   const [date_moved_in, setDate] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [selectedLandlordId, setSelectedLandlordId] = useState("");
+
 
   const navigate = useNavigate()
 
-  
+
   const fetchLandlords = async () => {
     let response = await fetch("http://localhost:8000/rent/signup")
     let data = await response.json()
     setLandlords(data.landlords)
-    console.log(data)
+    console.log(data.landlords)
   }
 
   useEffect(() => {
@@ -29,7 +31,7 @@ function SignUp() {
   const handleSubmit = (e) => {
     e.preventDefault()
     let dataToBePosted = {
-      landlord_id: landlords.length > 0 ? landlords[0].id : null,
+      landlord_id: selectedLandlordId,
       first_name,
       last_name,
       phone,
@@ -38,7 +40,6 @@ function SignUp() {
       house_number,
       date_moved_in
     }
-
     fetch("http://localhost:8000/rent/signup", {
       method: "POST",
       body: JSON.stringify(dataToBePosted),
@@ -161,7 +162,17 @@ function SignUp() {
                   className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
               </div>
               <div className="mb-6">
-                <select name="landlord_id" className="rounded focus:outline-none focus:shadow-outline">
+                <label htmlFor="landlordSelect" className="block text-sm font-medium text-gray-700 mb-4">
+                  Select a Landlord
+                </label>
+                <select
+                  id="landlordSelect"
+                  name="landlord_id"
+                  className="rounded focus:outline-none focus:shadow-outline"
+                  value={selectedLandlordId}
+                  onChange={(e) => {setSelectedLandlordId(e.target.value)}}
+                >
+                  <option value="">Select a landlord</option>
                   {landlords.map(landlord => (
                     <option key={landlord.id} value={landlord.id}>{landlord.first_name} {landlord.last_name}</option>
                   ))}
