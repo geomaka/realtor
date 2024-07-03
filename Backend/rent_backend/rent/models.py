@@ -69,7 +69,7 @@ class Payments(models.Model):
 
 
 class Utilities(models.Model):
-    landlord = models.ForeignKey(Landlord, on_delete = models.CASCADE)
+    tenant = models.ForeignKey(Tenant, on_delete = models.CASCADE)
     utility_name = models.CharField(max_length = 10)
     utility_cost = models.DecimalField(max_digits = 10, decimal_places = 2)
     rent = models.DecimalField(max_digits=10,decimal_places=2,default=0)

@@ -271,8 +271,18 @@ def house_details(request, property_id, tenant_id):
 
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
+    else:
+        try:
+            tenant = Tenant.objects.get(pk=tenant_id)
+        except Tenant.DoesNotExist:
+            return JsonResponse({"error": "Tenant not found"}, status=404)
 
-    return JsonResponse({"error": "Invalid request method"}, status=405)
+        try:
+            house_details = HouseDetails.objects.get(tenant=tenant)
+        except HouseDetails.DoesNotExist:
+            return JsonResponse({"error": "House details not found for this tenant"}, status=404)
+
+        return JsonResponse({"bedroom_count": house_details.bedroom_count})
 
 
 def login(request):
@@ -592,113 +602,114 @@ def delete(request,tenant_id):
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
-def utilities(request, landlord_id, property_id):
-    try:
-        landlord = Landlord.objects.get(pk=landlord_id)
-        property = PropertyDetails.objects.get(pk=property_id)
-    except (Landlord.DoesNotExist, PropertyDetails.DoesNotExist):
-        return JsonResponse({'error': 'Landlord or the property not found'}, status=404)
-
+def utilities(request, property_id, tenant_id):
     if request.method == "POST":
         try:
+            tenant = Tenant.objects.get(pk=tenant_id)
+            property_instance = Property.objects.get(pk=property_id)
+            property_details = PropertyDetails.objects.get(property=property_instance)
+
             data = json.loads(request.body)
-            print(data)
-            rent_for_1_bedroom = property.base_rent_1_bedroom if property.number_of_1_bedroom_houses > 0 else None
-            rent_for_2_bedroom = property.base_rent_2_bedroom if property.number_of_2_bedroom_houses > 0 else None
-            rent_for_3_bedroom = property.base_rent_3_bedroom if property.number_of_3_bedroom_houses > 0 else None
-            rent_for_4_bedroom = property.base_rent_4_bedroom if property.number_of_4_bedroom_houses > 0 else None
-            
-            utilities_data = []
+            bedroom_count = data.get("bedroomCount")
+            input_fields = data.get("inputFields")
+
+            if not input_fields or not bedroom_count:
+                return JsonResponse({"error": "Fill all the fields or no available rents"}, status=400)
 
             rent_dict = {
-                1: rent_for_1_bedroom,
-                2: rent_for_2_bedroom,
-                3: rent_for_3_bedroom,
-                4: rent_for_4_bedroom
+                "1": property_details.base_rent_1_bedroom,
+                "2": property_details.base_rent_2_bedroom,
+                "3": property_details.base_rent_3_bedroom,
+                "4": property_details.base_rent_4_bedroom
             }
 
-            available_rents = {k: v for k, v in rent_dict.items() if v is not None}
+            base_rent = rent_dict.get(bedroom_count)
+            if base_rent is None:
+                return JsonResponse({"error": f"No available rent for {bedroom_count} bedroom houses"}, status=400)
 
-            if available_rents and 'inputFields' in data:
-                try:
-                    with transaction.atomic():
-                        total_utility_cost = 0
+            utilities_data = []
+            total_utility_cost = 0
 
-                        for item in data['inputFields']:
-                            print(item)
-                            utility_name = item.get('utility_name')
-                            utility_cost = item.get('utility_cost')
+            for item in input_fields:
+                utility_name = item.get('utility_name')
+                utility_cost = item.get('utility_cost')
 
-                            if utility_name is None or utility_cost is None:
-                                return JsonResponse({'error': 'Utility name, cost required'}, status=400)
+                if not utility_name or utility_cost is None:
+                    return JsonResponse({'error': 'Utility name, cost required'}, status=400)
 
-                            cost = int(utility_cost)
-                            if cost < 0:
-                                raise ValueError("Utility cost cannot be negative")
+                cost = int(utility_cost)
+                if cost < 0:
+                    return JsonResponse({'error': 'Utility cost cannot be negative'}, status=400)
 
-                            if bedroom_count not in available_rents:
-                                print(bedroom_count)
-                                return JsonResponse({'error': f'No available rent for {bedroom_count} bedroom houses'}, status=400)
+                total_utility_cost += cost
 
-                            total_rent = available_rents[bedroom_count]
-                            total_utility_cost += cost
+                utility = Utilities.objects.create(
+                    tenant=tenant,
+                    utility_name=utility_name,
+                    utility_cost=cost,
+                    rent=base_rent,
+                    total=base_rent + total_utility_cost
+                )
 
-                            utility = Utilities.objects.create(
-                                landlord=landlord,
-                                utility_name=utility_name,
-                                utility_cost=cost,
-                                rent=total_rent,
-                                total=total_rent + total_utility_cost
-                            )
+                utilities_data.append({
+                    'id': utility.id,
+                    'utility_name': utility.utility_name,
+                    'utility_cost': utility.utility_cost,
+                    'bedroom_count': bedroom_count,
+                    'base_rent': base_rent,
+                    'total': utility.total
+                })
 
-                            utilities_data.append({
-                                'id': utility.id,
-                                'utility_name': utility.utility_name,
-                                'utility_cost': utility.utility_cost,
-                                'bedroom_count': bedroom_count,
-                                'base_rent': total_rent,
-                                'total': utility.total
-                            })
+            total = base_rent + total_utility_cost
 
-                        return JsonResponse({'utilities': utilities_data, 'total_utility_cost': total_utility_cost})
+            with transaction.atomic():
+                payment, created = Payments.objects.update_or_create(
+                    tenant=tenant,
+                    landlord = tenant.landlord,
+                    defaults={'amount': total, 'paid': False, 'balance': 0, 'date_paid' : datetime.now(), 'date_due' : datetime.now()}
+                )
 
-                except ValueError as e:
-                    return JsonResponse({'error': str(e)}, status=400)
+            return JsonResponse({'utilities': utilities_data, 'total_utility_cost': total_utility_cost}, status=201)
 
-                except Exception as e:
-                    return JsonResponse({'error': 'An unexpected error occurred'}, status=500)
-
-            else:
-                return JsonResponse({'error': 'Fill all the fields or no available rents'}, status=400)
-
+        except Tenant.DoesNotExist:
+            return JsonResponse({"error": "Tenant not found"}, status=404)
+        except Property.DoesNotExist:
+            return JsonResponse({"error": "Property not found"}, status=404)
+        except PropertyDetails.DoesNotExist:
+            return JsonResponse({"error": "Property details not found"}, status=404)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
 
-    else:
-        utilities_data = list(Utilities.objects.filter(landlord=landlord).values())
-        return JsonResponse({'utilities': utilities_data})
+    return JsonResponse({"error": "Invalid request method"}, status=405)
 
-def delete_utilities(request,utilities_id,landlord_id):
-    utility = Utilities.objects.get(pk = utilities_id)
-    landlord = landlord = Landlord.objects.get(pk=landlord_id)
-    total_utility_cost = Utilities.objects.filter(landlord=landlord).aggregate(total=Sum('utility_cost'))['total']
-    total_rent = Utilities.objects.filter(landlord=landlord).aggregate(total=Sum('rent'))['total']
+def delete_utilities(request, utilities_id, tenant_id):
+    try:
+        utility = Utilities.objects.get(pk=utilities_id)
+        tenant = Tenant.objects.get(pk=tenant_id)
+    except Utilities.DoesNotExist:
+        return JsonResponse({'error': 'Utility not found'}, status=404)
+    except Tenant.DoesNotExist:
+        return JsonResponse({'error': 'Tenant not found'}, status=404)
+
     if request.method == "DELETE":
         utility.delete()
-        total_utility_cost = Utilities.objects.filter(landlord=landlord).aggregate(total=Sum('utility_cost'))['total']
-        total_rent = Utilities.objects.filter(landlord=landlord).aggregate(total=Sum('rent'))['total']
+
+        total_utility_cost = Utilities.objects.filter(tenant=tenant).aggregate(total=Sum('utility_cost'))['total']
+        total_rent = Utilities.objects.filter(tenant=tenant).aggregate(total=Sum('rent'))['total']
 
         if total_utility_cost is None:
             total_utility_cost = 0
 
         if total_rent is None:
-            total_rent = utility.rent
+            total_rent = 0  
 
         total = total_utility_cost + total_rent
 
-        Payments.objects.filter(landlord=landlord).update(amount=total)
-            
-        return JsonResponse({"success" : True, "total" : total})
+        Payments.objects.filter(tenant=tenant).update(amount=total)
+
+        return JsonResponse({"success": True, "total": total})
 
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 

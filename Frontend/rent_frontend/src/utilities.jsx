@@ -6,10 +6,10 @@ import Footer from "./Components/footer";
 import TenantHeader from "./Components/tenantHeader";
 
 function Utilities() {
-  const [bedroomCount, setBedroomCount] = useState(0);
+  const [bedroomCount, setBedroomCount] = useState('')
   const [inputFields, setInputFields] = useState([{ utility_name: '', utility_cost: '' }]);
   const [utilities, setUtilities] = useState([])
-  const { landlordID, propertyID } = useParams();
+  const { tenantID,propertyID } = useParams();
   const [total, setTotal] = useState(0)
 
   const removeUtility = (index) => {
@@ -18,9 +18,20 @@ function Utilities() {
     setUtilities(utilities.filter((_, i) => i !== index));
   };
 
-  const deleteUtility = async (utilityID, landlordID) => {
+  const getBedroomCount = async () =>{
+    const response = await fetch (`http://localhost:8000/rent/${propertyID}/${tenantID}/house_details`)
+    const data = await response.json()
+    console.log(data)
+    setBedroomCount(data.bedroom_count)
+  }
+
+  useEffect(() =>{
+    getBedroomCount()
+  },[propertyID,tenantID])
+
+  const deleteUtility = async (utilityID, tenantID) => {
     try {
-      let response = await fetch(`http://localhost:8000/rent/adminsignup/${landlordID}/delete-utilities/${utilityID}`, {
+      let response = await fetch(`http://localhost:8000/rent/adminsignup/${tenantID}/delete-utilities/${utilityID}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" }
       });
@@ -56,7 +67,7 @@ function Utilities() {
     const dataToBePosted = { bedroomCount,inputFields };
     let jsonData = JSON.stringify(dataToBePosted)
     console.log(jsonData);
-    axios.post(`http://localhost:8000/rent/adminsignup/${landlordID}/${propertyID}/add-utilities`, dataToBePosted)
+    axios.post(`http://localhost:8000/rent/${tenantID}/${propertyID}/add-utilities`, dataToBePosted)
       .then(response => {
         setUtilities(response.data.utilities)
         setTotal(response.data.total)
@@ -69,10 +80,10 @@ function Utilities() {
   return (
     <>
     <TenantHeader />
-      <div className="flex justify-center">
+      <div className="flex justify-center h-screen items-center">
         <div className="w-full max-w-md">
           <h1 className="m-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-black">Add utilities</h1>
-          <h2 className="m-4 text-lg font-normal text-gray-500 lg:text-xl dark:text-gray-400">Add autility and if the cost is to be djusted later set it to "0" if it is fixed set the cost e.g "garbage collection : 100 ".</h2>
+          {/* <h2 className="m-4 text-lg font-normal text-gray-500 lg:text-xl dark:text-gray-400">Add autility and if the cost is to be djusted later set it to "0" if it is fixed set the cost e.g "garbage collection : 100 ".</h2> */}
           <form onSubmit={submit} className="bg-white  px-8 pt-6 pb-8 m-0">
             <ul>
               {utilities.length === 0 ? (
@@ -130,7 +141,7 @@ function Utilities() {
             </div>
           </form>
           <div className="mb-4">
-            {utilities.length === 0 ? (<Link to={`/${landlordID}/tenants`} className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800 cursor-not-allowed opacity-50">Done</Link>) : (<Link to={`/${landlordID}/tenants`} className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">Done</Link>)}
+            {utilities.length === 0 ? (<Link to={'#'} className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800 cursor-not-allowed opacity-50">Done</Link>) : (<Link to={`/${landlordID}/tenants`} className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">Done</Link>)}
           </div>
         </div>
       </div>

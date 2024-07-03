@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import TenantHeader from "./Components/tenantHeader";
 import Footer from "./Components/footer";
+import Utilities from "./utilities";
 
 function House() {
     const [propertyDetails, setPropertyDetails] = useState(null);
@@ -23,7 +24,7 @@ function House() {
         .then((res) => res.json())
         .then((data) =>{
             console.log(data)
-            navigate(`/${tenantID}`)
+            navigate(`/${tenantID}/${propertyID}`)
         })
         .catch((error) =>{
             console.log(error)
