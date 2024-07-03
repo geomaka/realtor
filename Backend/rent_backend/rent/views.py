@@ -7,7 +7,7 @@ from django.http import HttpResponse,HttpResponseRedirect,JsonResponse
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from .models import Tenant,Landlord,Payments,Utilities,PaymentsReceived, Property,PropertyDetails
+from .models import Tenant,Landlord,Payments,Utilities,PaymentsReceived, Property,PropertyDetails, HouseDetails
 from datetime import datetime
 from django_daraja.mpesa.core import MpesaClient
 from django.utils import timezone
@@ -28,6 +28,7 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.contenttypes.models import ContentType
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from django.forms.models import model_to_dict
 
 # Create your views here.
 def index(request):
@@ -60,8 +61,7 @@ def adminsignup(request):
             print(landlord)
             data = {
                 'message': 'Landlord created successfully',
-                'landlord_id': landlord.id,
-                'redirect_url': reverse('utilities', args=[landlord.id])
+                'landlord_id': landlord.id
             }
             return JsonResponse(data)
         else: 
@@ -99,7 +99,9 @@ def signup(request):
                 "last_name" : tenant.last_name,
                 "email" : tenant.email,
                 "phone" : tenant.phone,
-                "house_number" : tenant.house_number
+                "house_number" : tenant.house_number,
+                "landlord_id" : tenant.landlord_id,
+                "property_id" : tenant.property_id
             }
             return JsonResponse({"tenant": data})
         else:
@@ -115,7 +117,7 @@ def signup(request):
                     'address': property.property_name,
                 })
 
-        landlords_data.append({
+            landlords_data.append({
                 'id': landlord.id,
                 'first_name': landlord.first_name,
                 'last_name': landlord.last_name,
@@ -205,7 +207,73 @@ def property_details(request, landlord_id, property_id):
         else:
             return JsonResponse({"message" : "Number of houses are not equal"})
     else:
-        return JsonResponse({"Error" : "invalid method"},status=405)
+        try:
+            property = Property.objects.get(id=property_id)
+            property_details = PropertyDetails.objects.get(property=property)
+            property_details_data = model_to_dict(property_details)
+            return JsonResponse({"property_details": property_details_data}, status=200)
+        except Property.DoesNotExist:
+            return JsonResponse({"error": "Property not found"}, status=404)
+        except PropertyDetails.DoesNotExist:
+            return JsonResponse({"error": "Property details not found"}, status=404)
+
+def house_details(request, property_id, tenant_id):
+    if request.method == "POST":
+        try:
+            tenant = Tenant.objects.get(pk=tenant_id)
+            property_instance = Property.objects.get(pk=property_id)
+            property_details = PropertyDetails.objects.get(property=property_instance)
+        except Property.DoesNotExist:
+            return JsonResponse({"error": "Property not found"}, status=404)
+        except Tenant.DoesNotExist:
+            return JsonResponse({"error": "Tenant not found"}, status=404)
+        except PropertyDetails.DoesNotExist:
+            return JsonResponse({"error": "Property details not found"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+        try:
+            data = json.loads(request.body)
+            bedroom_count = data.get("bedroomCount")
+
+            if bedroom_count not in ["1", "2", "3", "4"]:
+                return JsonResponse({"error": "Invalid bedroom count"}, status=400)
+
+            base_rent = None
+            if bedroom_count == "1":
+                base_rent = property_details.base_rent_1_bedroom
+            elif bedroom_count == "2":
+                base_rent = property_details.base_rent_2_bedroom
+            elif bedroom_count == "3":
+                base_rent = property_details.base_rent_3_bedroom
+            elif bedroom_count == "4":
+                base_rent = property_details.base_rent_4_bedroom
+            else:
+                return JsonResponse({"error": "Bedroom count not supported"}, status=400)
+
+            house_detail = HouseDetails.objects.create(
+                tenant=tenant,
+                bedroom_count=bedroom_count,
+                base_rent=base_rent
+            )
+
+            return JsonResponse({
+                "message": "House details created successfully",
+                "house_details": {
+                    "tenant": house_detail.tenant.first_name,  # Assuming Tenant has a 'name' field
+                    "bedroom_count": house_detail.bedroom_count,
+                    "base_rent": str(house_detail.base_rent)  # Convert to string for JSON serialization
+                }
+            }, status=201)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON data"}, status=400)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
 
 def login(request):
     if request.method == "POST":
@@ -557,18 +625,19 @@ def utilities(request, landlord_id, property_id):
                         total_utility_cost = 0
 
                         for item in data['inputFields']:
+                            print(item)
                             utility_name = item.get('utility_name')
                             utility_cost = item.get('utility_cost')
-                            bedroom_count = item.get('bedroom_count')
 
-                            if utility_name is None or utility_cost is None or bedroom_count is None:
-                                return JsonResponse({'error': 'Utility name, cost, and bedroom count are required'}, status=400)
+                            if utility_name is None or utility_cost is None:
+                                return JsonResponse({'error': 'Utility name, cost required'}, status=400)
 
                             cost = int(utility_cost)
                             if cost < 0:
                                 raise ValueError("Utility cost cannot be negative")
 
                             if bedroom_count not in available_rents:
+                                print(bedroom_count)
                                 return JsonResponse({'error': f'No available rent for {bedroom_count} bedroom houses'}, status=400)
 
                             total_rent = available_rents[bedroom_count]

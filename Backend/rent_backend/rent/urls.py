@@ -16,7 +16,8 @@ urlpatterns =[
     path("api/reset-password",views.reset_password, name = "reset_password"),
     path("logout",views.logout_view, name = "logout"),
     path("<int:landlord_id>/tenants", views.tenants,name = "tenants"),
-    path("tenants/<int:tenant_id>",views.tenant_detail, name = "tenant-detail"),
-    path("tenants/<int:tenant_id>/payments",views.payments,name = "payments"),
-    path("tenants/<int:tenant_id>/confirmdelete",views.delete,name = "confirmdelete")
+    path("<int:property_id>/<str:tenant_id>/house_details", views.house_details, name= "house_details"),
+    path("tenants/<str:tenant_id>",views.tenant_detail, name = "tenant-detail"),
+    path("tenants/<str:tenant_id>/payments",views.payments,name = "payments"),
+    path("tenants/<str:tenant_id>/confirmdelete",views.delete,name = "confirmdelete")
 ]

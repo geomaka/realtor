@@ -32,6 +32,7 @@ class Property(models.Model):
     def __str__(self):
         return self.property_name
 
+
 class Tenant(models.Model):
     landlord = models.ForeignKey(Landlord, on_delete = models.CASCADE)
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='tenants')
@@ -45,6 +46,14 @@ class Tenant(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+class HouseDetails(models.Model):
+    tenant = models.OneToOneField(Tenant, on_delete=models.CASCADE, related_name='house_details')
+    bedroom_count = models.CharField(max_length=128)
+    base_rent = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f'{self.tenant.first_name} - {self.bedroom_count} Bedrooms'
 
 class Payments(models.Model):
     tenant = models.ForeignKey(Tenant, on_delete = models.CASCADE,db_column='house_number')

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Header from './Components/header';
+import Footer from './Components/footer';
 
 const Property = () => {
   const [number_of_houses, setNumberOfHouses] = useState(0);
@@ -15,6 +17,30 @@ const Property = () => {
   const [base_rent_4_bedroom, setBaseRent4Bedroom] = useState(0);
 
   const{ landlordID,propertyID } = useParams()
+  const navigate = useNavigate()
+
+  const handleYes = () => {
+    navigate(`/${landlordID}/property`);
+  };
+  const handleNo = () => {
+    navigate(`/${landlordID}/tenants`)
+    toast.dismiss()
+  }
+
+  const toasty = () => {
+    toast.info(
+      <div className="p-4">
+        <p className="text-lg mb-2">Do you want to add another property?</p>
+        <button className='bg-blue-500 text-white px-4 py-2 rounded mr-2 hover:bg-blue-600' onClick={handleYes}>Yes</button>
+        <button className='bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600' onClick={handleNo}>No</button>
+      </div>,
+      {
+        autoClose: false,
+        closeButton: false,
+        draggable: true,
+      }
+    );
+  }
 
 
   const handleSubmit = async (e) => {
@@ -60,7 +86,9 @@ const Property = () => {
   };
 
   return (
-    <div className="flex justify-center">
+    <>
+    <Header />
+    <div className="flex justify-center items-center h-screen">
       <div className="w-full max-w-md">
         <h1 className="m-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-black">Property details</h1>
         <form onSubmit={handleSubmit} className="bg-white  px-8 pt-6 pb-8 m-0">
@@ -197,6 +225,7 @@ const Property = () => {
             <button
               type="submit"
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              onClick={toasty}
             >
               Submit
             </button>
@@ -205,6 +234,8 @@ const Property = () => {
       </div>
       < ToastContainer/>
     </div>
+    < Footer />
+    </>
   );
 };
 

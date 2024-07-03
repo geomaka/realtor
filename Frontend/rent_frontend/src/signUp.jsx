@@ -30,6 +30,7 @@ function SignUp() {
   const fetchLandlords = async () => {
     let response = await fetch("http://localhost:8000/rent/signup")
     let data = await response.json()
+    console.log(data.landlords)
     setLandlords(data.landlords)
     for (let i = 0; i <= landlords.length; i++) {
       console.log(data.landlords[i].properties)
@@ -62,8 +63,12 @@ function SignUp() {
       .then((res) => res.json())
       .then((data) => {
         let id = data.tenant.house_number
+        let landlordID = data.tenant.landlord_id
+        let propertyID = data.tenant.property_id
         console.log(id)
-        navigate(`/${id}`)
+        console.log(landlordID)
+        console.log(propertyID)
+        navigate(`/${id}/${landlordID}/${propertyID}/House-type`)
         console.log(data)
       })
       .catch((error) => {
@@ -176,13 +181,13 @@ function SignUp() {
                   className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
               </div>
               <div className="mb-6">
-                <label htmlFor="landlordSelect" className="block text-sm font-medium text-gray-700 mb-4">
+                <label htmlFor="landlordSelect" className="sr-only">
                   Select a Landlord
                 </label>
                 <select
                   id="landlordSelect"
                   name="landlord_id"
-                  className="rounded focus:outline-none focus:shadow-outline"
+                  className="block py-2.5 px-0 w-full text-sm text-black bg-transparent border-0 border-b-2 border-gray-200 appearance dark:text-black dark:border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-200 peer"
                   onChange={handleSelection}
                 >
                   <option value="">Select a landlord</option>

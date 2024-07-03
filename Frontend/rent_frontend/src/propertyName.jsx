@@ -24,7 +24,7 @@ const handleSubmit = async (e) =>{
         let propertyID = data.property.property_id
         console.log(propertyID)
         // resetForm()
-        navigate(`/${landlordID}/${propertyID}/utilities`)
+        navigate(`/${landlordID}/${propertyID}/property-detail`)
     })
 
     const resetForm = () =>{

@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import Property from "./property";
+import Footer from "./Components/footer";
+import TenantHeader from "./Components/tenantHeader";
 
 function Utilities() {
   const [bedroomCount, setBedroomCount] = useState(0);
@@ -52,7 +53,7 @@ function Utilities() {
 
   const submit = (e) => {
     e.preventDefault();
-    const dataToBePosted = { bedroomCount, inputFields };
+    const dataToBePosted = { bedroomCount,inputFields };
     let jsonData = JSON.stringify(dataToBePosted)
     console.log(jsonData);
     axios.post(`http://localhost:8000/rent/adminsignup/${landlordID}/${propertyID}/add-utilities`, dataToBePosted)
@@ -63,38 +64,15 @@ function Utilities() {
         console.log(response.data)
       })
       .catch(error => console.error(error));
-
-    const handleYes = () => {
-      navigate(`/${landlordID}/property`);
-    };
-    const handleNo = () => {
-      toast.dismiss()
-    }
-
-    const toast = () => {
-      toast.info(
-        <div className="p-4">
-          <p className="text-lg mb-2">Do you want to add another property?</p>
-          <button className='bg-blue-500 text-white px-4 py-2 rounded mr-2 hover:bg-blue-600' onClick={handleYes}>Yes</button>
-          <button className='bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600' onClick={handleNo}>No</button>
-        </div>,
-        {
-          // position: toast.POSITION.TOP_CENTER,
-          autoClose: false,
-          closeButton: false,
-          draggable: true,
-        }
-      );
-    }
   };
 
   return (
     <>
-      < Property />
+    <TenantHeader />
       <div className="flex justify-center">
         <div className="w-full max-w-md">
           <h1 className="m-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-black">Add utilities</h1>
-          <h2 className="m-4 text-lg font-normal text-gray-500 lg:text-xl dark:text-gray-400">Use the add more to add more utilities according to type of house e.g "1 Bedroom house" and the bedroom count will be "1".</h2>
+          <h2 className="m-4 text-lg font-normal text-gray-500 lg:text-xl dark:text-gray-400">Add autility and if the cost is to be djusted later set it to "0" if it is fixed set the cost e.g "garbage collection : 100 ".</h2>
           <form onSubmit={submit} className="bg-white  px-8 pt-6 pb-8 m-0">
             <ul>
               {utilities.length === 0 ? (
@@ -117,20 +95,7 @@ function Utilities() {
                 ))
               )}
             </ul>
-            <span className="block mt-1 text-gray-500 mb-4">{bedroomCount} Bedroom Total : {total}</span>
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
-                Bedroom Count :
-              </label>
-              <input
-                type="text"
-                name="bedroom_count"
-                placeholder="Enter the number of bedroom"
-                value={bedroomCount}
-                onChange={(e) => setBedroomCount(Number(e.target.value))}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              />
-            </div>
+            <span className="block mt-1 text-gray-500 mb-4">Total : {total}</span>
             {inputFields.map((input, index) => (
               <div key={index}>
                 <div className="mb-4">
@@ -165,10 +130,11 @@ function Utilities() {
             </div>
           </form>
           <div className="mb-4">
-            {total === 0 ? (<Link to={`/${landlordID}/tenants`} className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800 cursor-not-allowed opacity-50">Done</Link>) : (<Link to={`/${landlordID}/tenants`} className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800" onClick={toast} >Done</Link>)}
+            {utilities.length === 0 ? (<Link to={`/${landlordID}/tenants`} className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800 cursor-not-allowed opacity-50">Done</Link>) : (<Link to={`/${landlordID}/tenants`} className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">Done</Link>)}
           </div>
         </div>
       </div>
+      < Footer />
     </>
   );
 }
