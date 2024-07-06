@@ -8,7 +8,7 @@ from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from .models import Tenant,Landlord,Payments,Utilities,PaymentsReceived, Property,PropertyDetails, HouseDetails
-from datetime import datetime
+from datetime import datetime, timedelta
 from django_daraja.mpesa.core import MpesaClient
 from django.utils import timezone
 import json
@@ -45,6 +45,7 @@ def getCSRF(request):
     else:
         return JsonResponse({"error": "not allowed"}, status=405)
 
+
 def adminsignup(request):
     if request.method == "POST":
         try:
@@ -54,15 +55,39 @@ def adminsignup(request):
             email = data.get("email")
             phone = data.get("phone")
             password = data.get("password")
+            payment_type = data.get("payment_type")
+            till_number = data.get("till_number")
+            paybill_number = data.get("paybill_number")
+            account_number = data.get("account_number")
 
-            if first_name and last_name and phone and email and password:
+            if first_name and last_name and phone and email and password and payment_type:
+                if payment_type == 'till':
+                    if not till_number:
+                        return JsonResponse({'error': 'Till number is required for till payment type'}, status=400)
+                    if paybill_number or account_number:
+                        return JsonResponse({'error': 'Paybill number and account number should be empty for till payment type'}, status=400)
+                    paybill_number = None  
+                    account_number = None  
+
+                elif payment_type == 'paybill':
+                    if not paybill_number:
+                        return JsonResponse({'error': 'Paybill number is required for paybill payment type'}, status=400)
+                    if not account_number:
+                        return JsonResponse({'error': 'Account number is required for paybill payment type'}, status=400)
+                    till_number = None  
+
                 hashed_pwd = make_password(password)
+
                 landlord = Landlord.objects.create(
                     first_name=first_name, 
                     last_name=last_name, 
                     phone=phone, 
                     email=email, 
-                    password=hashed_pwd
+                    password=hashed_pwd,
+                    payment_type=payment_type,
+                    till_number=till_number,
+                    paybill_number=paybill_number,
+                    account_number=account_number
                 )
 
                 send_mail(
@@ -79,7 +104,7 @@ def adminsignup(request):
                 }
                 return JsonResponse(data, status=201)
             else:
-                return JsonResponse({'error': 'Fill all the fields'}, status=400)
+                return JsonResponse({'error': 'Please fill all the required fields'}, status=400)
 
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON data'}, status=400)
@@ -537,7 +562,6 @@ def get_dynamic_date(date_moved_in):
     try:
         specific_date = datetime(current_year, next_month, move_in_day)
     except ValueError:
-        import calendar
         last_day_of_next_month = calendar.monthrange(current_year, next_month)[1]
         specific_date = datetime(current_year, next_month, last_day_of_next_month)
 
@@ -556,18 +580,113 @@ def remainder_email(date_moved_in, tenant):
             fail_silently=False,
              )
 
+import base64
+import requests
+
+def generate_access_token():
+    try:
+        consumer_key = settings.MPESA_CONSUMER_KEY
+        consumer_secret = settings.MPESA_CONSUMER_SECRET
+        
+        auth_string = f'{consumer_key}:{consumer_secret}'
+        
+        auth_base64 = base64.b64encode(auth_string.encode()).decode()
+
+        headers = {
+            'Authorization': f'Basic {auth_base64}',
+            'Content-Type': 'application/json'
+        }
+
+        url = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
+
+        response = requests.get(url, headers=headers)
+
+        response.raise_for_status()
+
+        access_token = response.json().get('access_token')
+
+        return access_token
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error generating access token: {e}")
+        return None
+
+def mpesa_express_payment(phone_number, amount, reference, description):
+    endpoint = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
+    access_token = generate_access_token()
+    print(access_token)
+    if not access_token:
+        return {'error': 'Failed to obtain access token'}
+
+    headers = {
+        'Authorization': 'Bearer 8yxSwTZQ74sirmipGK7jgsUIVVCY',
+        'Content-Type': 'application/json'
+    }
+
+    payload = {
+        'BusinessShortCode': settings.MPESA_SHORTCODE,
+        'Password': generate_password(),
+        'Timestamp': datetime.now().strftime('%Y%m%d%H%M%S'),
+        'TransactionType': 'CustomerPayBillOnline',
+        'Amount': amount,
+        'PartyA': phone_number,
+        'PartyB': settings.MPESA_SHORTCODE,
+        'PhoneNumber': phone_number,
+        'CallBackURL': 'http://localhost:8000/rent/tenants/B20/payments', 
+        'AccountReference': reference,
+        'TransactionDesc': description
+    }
+
+    try:
+        response = requests.post(endpoint, json=payload, headers=headers)
+        response_data = response.json()
+        return response_data
+    except requests.exceptions.RequestException as e:
+        print(f"Error making M-Pesa payment request: {e}")
+        return {'error': str(e)}
+
+def mpesa_till_payment(phone_number, amount, reference, description):
+    endpoint = 'https://sandbox.safaricom.co.ke/mpesa/b2b/v1/paymentrequest'
+    headers = {
+        'Authorization': f'Bearer {generate_access_token()}',
+        'Content-Type': 'application/json'
+    }
+
+    payload = {
+        'Initiator': settings.MPESA_INITIATOR_USERNAME,
+        'SecurityCredential': settings.MPESA_INITIATOR_SECURITY_CREDENTIAL,
+        'CommandID': 'BusinessPayment',
+        'Amount': amount,
+        'PartyA': settings.MPESA_SHORTCODE,
+        'PartyB': phone_number,
+        'Remarks': description,
+        'QueueTimeOutURL': 'https://your-queue-timeout-url.com',  # Replace with your queue timeout URL
+        'ResultURL': 'https://your-result-url.com',  # Replace with your result URL
+        'AccountReference': reference,
+        'TransactionDesc': description
+    }
+
+    try:
+        response = requests.post(endpoint, json=payload, headers=headers)
+        response_data = response.json()
+        return response_data
+    except requests.exceptions.RequestException as e:
+        return {'error': str(e)}
+
+def generate_password():
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+    password = base64.b64encode(f'{settings.MPESA_SHORTCODE}{settings.MPESA_PASSKEY}{timestamp}'.encode()).decode('utf-8')
+    return password
 
 def payments(request, tenant_id):
     if request.method == "POST":
         try:
             tenant = Tenant.objects.get(pk=tenant_id)
             utilities = Utilities.objects.filter(tenant=tenant)
-            print(utilities.values('rent'))
             data = json.loads(request.body)
             amount_paid = int(data.get("amount", 0))
-
+            print(amount_paid)
             total_amount_due = sum(utility.total for utility in utilities)
-            print(total_amount_due)
 
             for utility in utilities:
                 if amount_paid > 0:
@@ -576,35 +695,43 @@ def payments(request, tenant_id):
                         utility.total = 0
                     else:
                         utility.total -= amount_paid
-                        amount_paid = 0
+                        # amount_paid = 0
                     utility.save()
 
             new_balance = sum(utility.total for utility in utilities)
 
-            if timezone.now().date() == get_dynamic_date(tenant.date_moved_in).date():
-                balance = total_amount_due
-            else:
-                balance = new_balance
+            landlord = tenant.landlord
+            phone = tenant.phone
+            if phone.startswith('0'):
+                phone = '254' + phone[1:]
+
+            if landlord.paybill_number:
+                print(amount_paid)
+                response = mpesa_express_payment(
+                    phone,
+                    amount_paid,
+                    f"Payment for {tenant.first_name} {tenant.last_name}",
+                    f"Utility payment for {tenant.house_number}"
+                )
+            elif landlord.till_number:
+                mpesa_till_payment(
+                 phone,
+                 amount_paid,
+                 f"Payment for {tenant.first_name} {tenant.last_name}",
+                 f"Utility payment for {tenant.house_number}"
+                   )
 
             payment = Payments.objects.create(
-                landlord=tenant.landlord,
+                landlord=landlord,
                 tenant=tenant,
-                amount=total_amount_due, 
+                amount=total_amount_due,
                 paid=total_amount_due - new_balance,
-                balance=balance,
-                date_due=get_dynamic_date(),
-                date_paid=timezone.now()
+                balance=new_balance,
+                date_due=datetime.now(),
+                date_paid=datetime.now()
             )
 
             remainder_email(tenant.date_moved_in, tenant)
-
-            cl = MpesaClient() 
-            phone_number = tenant.phone
-            paid_amount = int(amount_paid)
-            account_reference = f"Payment for {tenant.first_name} {tenant.last_name}"
-            transaction_desc = f"Utility payment for {tenant.house_number}"
-            callback_url = 'https://api.darajambili.com/express-payment' 
-            response = cl.stk_push(phone_number, paid_amount, account_reference, transaction_desc, callback_url)
 
             response_data = {
                 "landlord": payment.landlord.first_name,
@@ -616,14 +743,12 @@ def payments(request, tenant_id):
                 "date_paid": payment.date_paid
             }
 
-            return JsonResponse({'success': True, 'data': response_data, 'mpesa_response': response.json()})
+            return JsonResponse({'success': True, 'data': response_data, 'mpesa_response': response})
 
         except Tenant.DoesNotExist:
             return JsonResponse({'success': False, 'message': f"Tenant with id {tenant_id} does not exist"}, status=404)
 
         except Exception as e:
-            if 'payment' in locals():
-                payment.delete()
             return JsonResponse({'success': False, 'message': f"Error initiating payment: {str(e)}"}, status=500)
 
     else:

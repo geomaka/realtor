@@ -15,12 +15,37 @@ class PasswordResetToken(models.Model):
         return f"Reset token for {self.user}"
 
 class Landlord(models.Model):
-    first_name = models.CharField(max_length =64)
-    last_name = models.CharField(max_length = 64)
-    email = models.EmailField(max_length = 64, unique = True)
-    phone = models.BigIntegerField(blank = False)
-    password = models.CharField(max_length = 128)
+    PAYMENT_TYPE_CHOICES = [
+        ('till', 'Till Number'),
+        ('paybill', 'Paybill Number'),
+    ]
 
+    first_name = models.CharField(max_length=64)
+    last_name = models.CharField(max_length=64)
+    email = models.EmailField(max_length=64, unique=True)
+    phone = models.BigIntegerField(blank=False)
+    password = models.CharField(max_length=128)
+    payment_type = models.CharField(max_length=7, choices=PAYMENT_TYPE_CHOICES, default='till')
+    till_number = models.CharField(max_length=10, blank=True, null=True)
+    paybill_number = models.CharField(max_length=10, blank=True, null=True)
+    account_number = models.CharField(max_length=64, blank=True, null=True)
+
+    def clean(self):
+        """
+        Custom validation to ensure that the correct payment fields are provided based on payment_type.
+        """
+        if self.payment_type == 'till':
+            if not self.till_number:
+                raise ValidationError('Till number is required for till payment type.')
+            if self.paybill_number or self.account_number:
+                raise ValidationError('Paybill number and account number should not be provided for till payment type.')
+        elif self.payment_type == 'paybill':
+            if not self.paybill_number:
+                raise ValidationError('Paybill number is required for paybill payment type.')
+            if not self.account_number:
+                raise ValidationError('Account number is required for paybill payment type.')
+            if self.till_number:
+                raise ValidationError('Till number should not be provided for paybill payment type.')
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
