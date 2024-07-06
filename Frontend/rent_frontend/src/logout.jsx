@@ -12,7 +12,7 @@ function Logout (){
         let data = await response.json()
         if(data.message){
             setMessage(data.message)
-            navigate('/login')
+            navigate('/login',{ state: { message: data.message, loggedOut : true } })
             setLoggedOut(true)
         }
         console.log(data)

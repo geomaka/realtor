@@ -104,8 +104,6 @@ def signup(request):
             landlord_id = data.get("landlord_id")
             property_id = data.get("property_id")
 
-            print(data)
-
             try:
                 properties = Property.objects.get(pk=property_id)
             except Property.DoesNotExist:
@@ -372,7 +370,7 @@ def login(request):
                             'refresh': str(refresh),
                         })
 
-                return JsonResponse({'error': 'Invalid login details'}, status=401)
+                return JsonResponse({'error': 'Invalid login details','status' : 'fail'}, status=401)
 
             except Landlord.DoesNotExist:
                 try:

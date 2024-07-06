@@ -63,7 +63,7 @@ function Payments() {
         <h1 className='m-8 text-lg font-extrabold text-gray-500 lg:text-xl sm:px-16 xl:px-48 dark:text-blue-500'>Make payments</h1>
         <form onSubmit={handleSubmit}>
           <div className='mb-6'>
-            <label for="small-input" className="block m-4 text-sm font-medium text-gray-900 dark:text-black">Enter the amount to pay</label>
+            <label htmlFor="small-input" className="block m-4 text-sm font-medium text-gray-900 dark:text-black">Enter the amount to pay</label>
             <input
               type="number"
               value={amount}

@@ -1,80 +1,94 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Footer from "./Components/footer";
-import Property from "./property";
 
 function SignUp() {
-  const [landlords, setLandlords] = useState([])
-  const [house_number, setHouse] = useState('')
-  const [first_name, setFirst] = useState('')
-  const [last_name, setLast] = useState('')
-  const [phone, setPhone] = useState('')
-  const [date_moved_in, setDate] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [landlords, setLandlords] = useState([]);
+  const [properties, setProperties] = useState([]);
+  const [house_number, setHouse] = useState("");
+  const [first_name, setFirst] = useState("");
+  const [last_name, setLast] = useState("");
+  const [phone, setPhone] = useState("");
+  const [date_moved_in, setDate] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [selectedLandlordId, setSelectedLandlordId] = useState("");
-  const [properties, setProperties] = useState([])
-  const [propertyID,setPropertyID] = useState('')
+  const [propertyID, setPropertyID] = useState("");
+  const [error, setError] = useState("");
 
+  const navigate = useNavigate();
 
-  const navigate = useNavigate()
+  useEffect(() => {
+    fetchLandlords();
+  }, []);
+
+  const fetchLandlords = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/rent/signup");
+      if (!response.ok) {
+        throw new Error("Failed to fetch landlords.");
+      }
+      const data = await response.json();
+      setLandlords(data.landlords);
+      if (data.landlords.length > 0) {
+        setProperties(data.landlords[0].properties);
+      }
+    } catch (error) {
+      console.error("Error fetching landlords:", error.message);
+      setError("Failed to fetch landlords. Please try again later.");
+    }
+  };
 
   const handleSelection = (event) => {
     const selectedValue = event.target.value;
-    const [landlordId, propertyId] = selectedValue.split('-');
-    setSelectedLandlordId(landlordId)
-    setPropertyID(propertyId)
-  }
-
-
-  const fetchLandlords = async () => {
-    let response = await fetch("http://localhost:8000/rent/signup")
-    let data = await response.json()
-    console.log(data.landlords)
-    setLandlords(data.landlords)
-    for (let i = 0; i <= landlords.length; i++) {
-      console.log(data.landlords[i].properties)
-      setProperties(data.landlords[i].properties)
+    const [landlordId, propertyId] = selectedValue.split("-");
+    setSelectedLandlordId(landlordId);
+    setPropertyID(propertyId);
+    const selectedLandlord = landlords.find(
+      (landlord) => landlord.id.toString() === landlordId
+    );
+    if (selectedLandlord) {
+      setProperties(selectedLandlord.properties);
     }
-  }
+  };
 
-  useEffect(() => {
-    fetchLandlords()
-  }, [])
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    let dataToBePosted = {
-      property_id  : propertyID ,
-      landlord_id : selectedLandlordId,
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const dataToBePosted = {
+      property_id: propertyID,
+      landlord_id: selectedLandlordId,
       first_name,
       last_name,
       phone,
       email,
       password,
       house_number,
-      date_moved_in
+      date_moved_in,
+    };
+
+    try {
+      const response = await fetch("http://localhost:8000/rent/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dataToBePosted),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to sign up. Please try again later.");
+      }
+
+      const data = await response.json();
+      let id = data.tenant.house_number;
+      let landlordID = data.tenant.landlord_id;
+      let propertyID = data.tenant.property_id;
+      navigate(`/${id}/${landlordID}/${propertyID}/House-type`);
+    } catch (error) {
+      console.error("Error signing up:", error.message);
+      setError("Check details and try again.");
     }
-    fetch("http://localhost:8000/rent/signup", {
-      method: "POST",
-      body: JSON.stringify(dataToBePosted),
-      headers: { "Content-Type": "application/json" }
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        let id = data.tenant.house_number
-        let landlordID = data.tenant.landlord_id
-        let propertyID = data.tenant.property_id
-        console.log(id)
-        console.log(landlordID)
-        console.log(propertyID)
-        navigate(`/${id}/${landlordID}/${propertyID}/House-type`)
-        console.log(data)
-      })
-      .catch((error) => {
-        console.log(error)
-      })
-  }
+  };
 
   return (
     <>
@@ -87,10 +101,16 @@ function SignUp() {
         </div>
         <div className="flex justify-center items-center h-screen">
           <div className="w-full max-w-xs">
-            <h1 className="m-4 text-4xl font-bold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-blue-500">Tenant sign-in</h1>
+            <h1 className="m-4 text-4xl font-bold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-blue-500">
+              Tenant sign-in
+            </h1>
+            {error && <div className="text-red-500 mb-4">{error}</div>}
             <form onSubmit={handleSubmit}>
               <div className="mb-6">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
+                <label
+                  className="block text-gray-700 text-sm font-bold mb-2"
+                  htmlFor="username"
+                >
                   House Number
                 </label>
                 <input
@@ -100,10 +120,14 @@ function SignUp() {
                   onChange={(e) => setHouse(e.target.value)}
                   name="house_number"
                   placeholder="Enter the house number"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                />
               </div>
               <div className="mb-6">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
+                <label
+                  className="block text-gray-700 text-sm font-bold mb-2"
+                  htmlFor="username"
+                >
                   First name
                 </label>
                 <input
@@ -113,10 +137,14 @@ function SignUp() {
                   onChange={(e) => setFirst(e.target.value)}
                   name="first_name"
                   placeholder="Enter first name"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                />
               </div>
               <div className="mb-6">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
+                <label
+                  className="block text-gray-700 text-sm font-bold mb-2"
+                  htmlFor="username"
+                >
                   Last name
                 </label>
                 <input
@@ -126,10 +154,14 @@ function SignUp() {
                   onChange={(e) => setLast(e.target.value)}
                   name="last_name"
                   placeholder="Enter last name"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                />
               </div>
               <div className="mb-6">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
+                <label
+                  className="block text-gray-700 text-sm font-bold mb-2"
+                  htmlFor="username"
+                >
                   Phone no.
                 </label>
                 <input
@@ -139,10 +171,14 @@ function SignUp() {
                   onChange={(e) => setPhone(e.target.value)}
                   name="phone"
                   placeholder="Enter phone"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                />
               </div>
               <div className="mb-6">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
+                <label
+                  className="block text-gray-700 text-sm font-bold mb-2"
+                  htmlFor="username"
+                >
                   Date moved in
                 </label>
                 <input
@@ -152,10 +188,14 @@ function SignUp() {
                   onChange={(e) => setDate(e.target.value)}
                   name="date_moved_in"
                   placeholder="Enter Date moved in"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                />
               </div>
               <div className="mb-6">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
+                <label
+                  className="block text-gray-700 text-sm font-bold mb-2"
+                  htmlFor="username"
+                >
                   Email
                 </label>
                 <input
@@ -165,10 +205,14 @@ function SignUp() {
                   onChange={(e) => setEmail(e.target.value)}
                   name="email"
                   placeholder="Enter email"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                />
               </div>
               <div className="mb-6">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
+                <label
+                  className="block text-gray-700 text-sm font-bold mb-2"
+                  htmlFor="username"
+                >
                   Password
                 </label>
                 <input
@@ -178,7 +222,8 @@ function SignUp() {
                   onChange={(e) => setPassword(e.target.value)}
                   name="password"
                   placeholder="password"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                />
               </div>
               <div className="mb-6">
                 <label htmlFor="landlordSelect" className="sr-only">
@@ -191,26 +236,32 @@ function SignUp() {
                   onChange={handleSelection}
                 >
                   <option value="">Select a landlord</option>
-                  {landlords.map(landlord => (
-                    landlord.properties.map(property => (
-                      <option key={`${property.id}-${landlord.id}`} value={`${landlord.id}-${property.id}`}>
+                  {landlords.map((landlord) =>
+                    landlord.properties.map((property) => (
+                      <option
+                        key={`${property.id}-${landlord.id}`}
+                        value={`${landlord.id}-${property.id}`}
+                      >
                         {`${landlord.first_name} ${landlord.last_name} - ${property.address}`}
                       </option>
                     ))
-                  ))}
+                  )}
                 </select>
-              </div >
-              <div className="flex items-center justify-between" >
-                <input type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" value="Sign in" />
+              </div>
+              <div className="flex items-center justify-between">
+                <input
+                  type="submit"
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                  value="Sign in"
+                />
               </div>
             </form>
           </div>
         </div>
       </section>
-      < Footer />
+      <Footer />
     </>
-  )
-
+  );
 }
 
 export default SignUp;
