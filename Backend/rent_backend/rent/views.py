@@ -29,6 +29,7 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.forms.models import model_to_dict
+from django.conf import settings
 
 # Create your views here.
 def index(request):
@@ -45,67 +46,111 @@ def getCSRF(request):
         return JsonResponse({"error": "not allowed"}, status=405)
 
 def adminsignup(request):
-
-    # return render(request,"rent/adminSignup.html")
     if request.method == "POST":
-        data = json.loads(request.body)
-        first_name = data.get("first_name")
-        last_name = data.get("last_name")
-        email = data.get("email")
-        phone = data.get("phone")
-        password = data.get("password")
+        try:
+            data = json.loads(request.body)
+            first_name = data.get("first_name")
+            last_name = data.get("last_name")
+            email = data.get("email")
+            phone = data.get("phone")
+            password = data.get("password")
 
-        if first_name and last_name and phone and email and password:
-            hashed_pwd = make_password(password)
-            landlord = Landlord.objects.create(first_name=first_name, last_name=last_name, phone=phone, email=email, password=hashed_pwd)
-            print(landlord)
-            data = {
-                'message': 'Landlord created successfully',
-                'landlord_id': landlord.id
-            }
-            return JsonResponse(data)
-        else: 
-            return JsonResponse({'error': 'Fill all the fields'}, status=400)
+            if first_name and last_name and phone and email and password:
+                hashed_pwd = make_password(password)
+                landlord = Landlord.objects.create(
+                    first_name=first_name, 
+                    last_name=last_name, 
+                    phone=phone, 
+                    email=email, 
+                    password=hashed_pwd
+                )
+
+                send_mail(
+                    'Welcome to Our Service',
+                    f'Hello {landlord.first_name},\n\nThank you for signing up as a landlord on our platform.',
+                    settings.EMAIL_HOST_USER,
+                    [landlord.email],
+                    fail_silently=False,
+                )
+
+                data = {
+                    'message': 'Landlord created successfully',
+                    'landlord_id': landlord.id
+                }
+                return JsonResponse(data, status=201)
+            else:
+                return JsonResponse({'error': 'Fill all the fields'}, status=400)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+        
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
 
     else:
         return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 def signup(request):
     if request.method == "POST":
-        data = json.loads(request.body)
-        house_number = data.get("house_number")
-        first_name = data.get("first_name")
-        last_name = data.get("last_name")
-        email = data.get("email")
-        date_moved_in = data.get("date_moved_in")
-        phone = data.get("phone")
-        password = data.get("password")
-        landlord_id = data.get("landlord_id")
-        property_id = data.get("property_id")
-
-        print(data)
-
         try:
-            properties = Property.objects.get(pk=property_id)
+            data = json.loads(request.body)
+            house_number = data.get("house_number")
+            first_name = data.get("first_name")
+            last_name = data.get("last_name")
+            email = data.get("email")
+            date_moved_in = data.get("date_moved_in")
+            phone = data.get("phone")
+            password = data.get("password")
+            landlord_id = data.get("landlord_id")
+            property_id = data.get("property_id")
 
-        except Property.DoesNotExist:
-            print("Does not exist")
- 
-        if first_name and last_name and phone and email and password and landlord_id and house_number and date_moved_in:
-            hashed_password = make_password(password)
-            tenant = Tenant.objects.create(house_number=house_number, first_name=first_name, last_name=last_name, phone=phone, email=email, date_moved_in = date_moved_in, password=hashed_password, landlord_id=landlord_id, property_id=property_id)
-            data = {
-                "first_name" : tenant.first_name,
-                "last_name" : tenant.last_name,
-                "email" : tenant.email,
-                "phone" : tenant.phone,
-                "house_number" : tenant.house_number,
-                "landlord_id" : tenant.landlord_id,
-                "property_id" : tenant.property_id
-            }
-            return JsonResponse({"tenant": data})
-        else:
-            return JsonResponse({"success": False, "message": "Fill all the fields"})
+            print(data)
+
+            try:
+                properties = Property.objects.get(pk=property_id)
+            except Property.DoesNotExist:
+                return JsonResponse({"error": "Property does not exist"}, status=404)
+
+            if all([first_name, last_name, phone, email, password, landlord_id, house_number, date_moved_in]):
+                hashed_password = make_password(password)
+                tenant = Tenant.objects.create(
+                    house_number=house_number,
+                    first_name=first_name,
+                    last_name=last_name,
+                    phone=phone,
+                    email=email,
+                    date_moved_in=date_moved_in,
+                    password=hashed_password,
+                    landlord_id=landlord_id,
+                    property_id=property_id
+                )
+
+                send_mail(
+                    'Welcome to Your New Home',
+                    f'Hello {tenant.first_name},\n\nThank you for signing up as a tenant at {properties.property_name}. We hope you enjoy your stay.',
+                    settings.EMAIL_HOST_USER,  
+                    [tenant.email],
+                    fail_silently=False,
+                )
+
+                data = {
+                    "first_name": tenant.first_name,
+                    "last_name": tenant.last_name,
+                    "email": tenant.email,
+                    "phone": tenant.phone,
+                    "house_number": tenant.house_number,
+                    "landlord_id": tenant.landlord_id,
+                    "property_id": tenant.property_id
+                }
+                return JsonResponse({"tenant": data}, status=201)
+            else:
+                return JsonResponse({"success": False, "message": "Fill all the fields"}, status=400)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON data"}, status=400)
+        
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
     else:
         landlords = Landlord.objects.prefetch_related('properties').all()
         landlords_data = []
@@ -305,11 +350,20 @@ def login(request):
                         user.save()
                 
                     user.backend = 'django.contrib.auth.backends.ModelBackend'
-
                     user = authenticate(request, username=landlord.email, password=password)
+
                     if user is not None:
-                        auth_login(request,user)
+                        auth_login(request, user)
                         refresh = RefreshToken.for_user(user)
+
+                        send_mail(
+                            'Login Successful',
+                            f'Hello {landlord.first_name},\n\nYou have successfully logged into your account.',
+                            settings.EMAIL_HOST_USER,
+                            [landlord.email],
+                            fail_silently=False,
+                        )
+
                         return JsonResponse({
                             'status': 'success',
                             'role': 'landlord',
@@ -317,6 +371,7 @@ def login(request):
                             'access': str(refresh.access_token),
                             'refresh': str(refresh),
                         })
+
                 return JsonResponse({'error': 'Invalid login details'}, status=401)
 
             except Landlord.DoesNotExist:
@@ -330,23 +385,31 @@ def login(request):
                             user.save()
                 
                         user.backend = 'django.contrib.auth.backends.ModelBackend'
-
                         user = authenticate(request, username=tenant.email, password=password)
-                        print(user)
+
                         if user is not None:
-                            auth_login(request,user)
+                            auth_login(request, user)
                             refresh = RefreshToken.for_user(user)
 
                             property_data = tenant.property.pk
 
+                            send_mail(
+                                'Login Successful',
+                                f'Hello {tenant.first_name},\n\nYou have successfully logged into your account.',
+                                settings.EMAIL_HOST_USER,
+                                [tenant.email],
+                                fail_silently=False,
+                            )
+
                             return JsonResponse({
                                 'status': 'success',
                                 'role': 'tenant',
-                                'propertyID' : property_data ,
+                                'propertyID': property_data,
                                 'tenantID': tenant.house_number,
                                 'access': str(refresh.access_token),
                                 'refresh': str(refresh),
                             })
+
                     return JsonResponse({'error': 'Invalid login details'}, status=401)
 
                 except Tenant.DoesNotExist:
