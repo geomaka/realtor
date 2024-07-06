@@ -14,7 +14,7 @@ function Utilities() {
 
   const removeUtility = (index) => {
     const utilityID = utilities[index].id;
-    deleteUtility(utilityID, landlordID)
+    deleteUtility(utilityID, tenantID)
     setUtilities(utilities.filter((_, i) => i !== index));
   };
 
@@ -31,7 +31,7 @@ function Utilities() {
 
   const deleteUtility = async (utilityID, tenantID) => {
     try {
-      let response = await fetch(`http://localhost:8000/rent/adminsignup/${tenantID}/delete-utilities/${utilityID}`, {
+      let response = await fetch(`http://localhost:8000/rent/${tenantID}/delete-utilities/${utilityID}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" }
       });
@@ -79,8 +79,7 @@ function Utilities() {
 
   return (
     <>
-    <TenantHeader />
-      <div className="flex justify-center h-screen items-center">
+      <div className="flex">
         <div className="w-full max-w-md">
           <h1 className="m-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-black">Add utilities</h1>
           {/* <h2 className="m-4 text-lg font-normal text-gray-500 lg:text-xl dark:text-gray-400">Add autility and if the cost is to be djusted later set it to "0" if it is fixed set the cost e.g "garbage collection : 100 ".</h2> */}
@@ -137,15 +136,14 @@ function Utilities() {
             ))}
             <div className="flex items-center justify-between mb-4">
               <button type="button" onClick={addFields} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Add More..</button>
-              <input type="submit" className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800" />
+              <input type="submit" className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800" value="Add" />
             </div>
           </form>
           <div className="mb-4">
-            {utilities.length === 0 ? (<Link to={'#'} className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800 cursor-not-allowed opacity-50">Done</Link>) : (<Link to={`/${landlordID}/tenants`} className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">Done</Link>)}
+            {/* {utilities.length === 0 ? (<Link to={'#'} className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800 cursor-not-allowed opacity-50 ml-4">Done</Link>) : (<Link to={'#'} className="ml-4 inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">Done</Link>)} */}
           </div>
         </div>
       </div>
-      < Footer />
     </>
   );
 }

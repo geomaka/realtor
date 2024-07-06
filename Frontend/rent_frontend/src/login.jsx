@@ -33,7 +33,8 @@ function Login() {
                     navigate(`/${id}/tenants`)
                 } else {
                     let id = data.tenantID
-                    navigate(`/${id}`)
+                    let propertyID = data.propertyID
+                    navigate(`/${id}/${propertyID}`)
                 }
                 console.log(data)
             })

@@ -337,9 +337,12 @@ def login(request):
                             auth_login(request,user)
                             refresh = RefreshToken.for_user(user)
 
+                            property_data = tenant.property.pk
+
                             return JsonResponse({
                                 'status': 'success',
                                 'role': 'tenant',
+                                'propertyID' : property_data ,
                                 'tenantID': tenant.house_number,
                                 'access': str(refresh.access_token),
                                 'refresh': str(refresh),
@@ -472,16 +475,18 @@ def get_dynamic_date():
     
     return specific_date
 
+
 def payments(request, tenant_id):
     if request.method == "POST":
         try:
             tenant = Tenant.objects.get(pk=tenant_id)
-            utilities = Utilities.objects.filter(landlord=tenant.landlord)
-
+            utilities = Utilities.objects.filter(tenant=tenant)
+            print(utilities.values('rent'))
             data = json.loads(request.body)
             amount_paid = int(data.get("amount", 0))
 
-            total_amount = sum([utility.total for utility in utilities])
+            total_amount_due = sum(utility.total for utility in utilities)
+            print(total_amount_due)
 
             for utility in utilities:
                 if amount_paid > 0:
@@ -493,30 +498,30 @@ def payments(request, tenant_id):
                         amount_paid = 0
                     utility.save()
 
-            new_balance = sum([utility.total for utility in utilities])
+            new_balance = sum(utility.total for utility in utilities)
 
             if timezone.now().date() == get_dynamic_date().date():
-                balance = total_amount
+                balance = total_amount_due
             else:
                 balance = new_balance
 
             payment = Payments.objects.create(
                 landlord=tenant.landlord,
                 tenant=tenant,
-                amount=new_balance,  
-                paid=total_amount - new_balance, 
+                amount=total_amount_due, 
+                paid=total_amount_due - new_balance,
                 balance=balance,
                 date_due=get_dynamic_date(),
                 date_paid=timezone.now()
             )
 
-            cl = MpesaClient()
-            phone_number = tenant.phone  
-            amount = int(payment.paid)
+            cl = MpesaClient() 
+            phone_number = tenant.phone
+            paid_amount = int(amount_paid)
             account_reference = f"Payment for {tenant.first_name} {tenant.last_name}"
             transaction_desc = f"Utility payment for {tenant.house_number}"
-            callback_url = 'https://api.darajambili.com/express-payment'
-            response = cl.stk_push(phone_number, amount, account_reference, transaction_desc, callback_url)
+            callback_url = 'https://api.darajambili.com/express-payment' 
+            response = cl.stk_push(phone_number, paid_amount, account_reference, transaction_desc, callback_url)
 
             response_data = {
                 "landlord": payment.landlord.first_name,
@@ -532,7 +537,7 @@ def payments(request, tenant_id):
 
         except Tenant.DoesNotExist:
             return JsonResponse({'success': False, 'message': f"Tenant with id {tenant_id} does not exist"}, status=404)
-        
+
         except Exception as e:
             if 'payment' in locals():
                 payment.delete()
@@ -558,6 +563,7 @@ def payments(request, tenant_id):
 
         except Tenant.DoesNotExist:
             return JsonResponse({'success': False, 'message': f"Tenant with id {tenant_id} does not exist"}, status=404)
+
 
 def payments_received(request, landlord_id):
     try:
@@ -627,49 +633,51 @@ def utilities(request, property_id, tenant_id):
             if base_rent is None:
                 return JsonResponse({"error": f"No available rent for {bedroom_count} bedroom houses"}, status=400)
 
-            utilities_data = []
             total_utility_cost = 0
+            utilities_data = []
 
-            for item in input_fields:
-                utility_name = item.get('utility_name')
-                utility_cost = item.get('utility_cost')
-
-                if not utility_name or utility_cost is None:
-                    return JsonResponse({'error': 'Utility name, cost required'}, status=400)
-
-                cost = int(utility_cost)
-                if cost < 0:
-                    return JsonResponse({'error': 'Utility cost cannot be negative'}, status=400)
-
-                total_utility_cost += cost
-
-                utility = Utilities.objects.create(
-                    tenant=tenant,
-                    utility_name=utility_name,
-                    utility_cost=cost,
-                    rent=base_rent,
-                    total=base_rent + total_utility_cost
-                )
-
-                utilities_data.append({
-                    'id': utility.id,
-                    'utility_name': utility.utility_name,
-                    'utility_cost': utility.utility_cost,
-                    'bedroom_count': bedroom_count,
-                    'base_rent': base_rent,
-                    'total': utility.total
-                })
-
-            total = base_rent + total_utility_cost
+            Utilities.objects.filter(tenant=tenant).delete()
 
             with transaction.atomic():
+                for item in input_fields:
+                    utility_name = item.get('utility_name')
+                    utility_cost = item.get('utility_cost')
+
+                    if not utility_name or utility_cost is None:
+                        return JsonResponse({'error': 'Utility name, cost required'}, status=400)
+
+                    cost = int(utility_cost)
+                    if cost < 0:
+                        return JsonResponse({'error': 'Utility cost cannot be negative'}, status=400)
+
+                    total_utility_cost += cost
+
+                    utility = Utilities.objects.create(
+                        tenant=tenant,
+                        utility_name=utility_name,
+                        utility_cost=cost,
+                        rent=base_rent,
+                        total=base_rent + total_utility_cost
+                    )
+
+                    utilities_data.append({
+                        'id': utility.id,
+                        'utility_name': utility.utility_name,
+                        'utility_cost': utility.utility_cost,
+                        'bedroom_count': bedroom_count,
+                        'base_rent': base_rent,
+                        'total': utility.total
+                    })
+
+                total = base_rent + total_utility_cost
+
                 payment, created = Payments.objects.update_or_create(
                     tenant=tenant,
-                    landlord = tenant.landlord,
-                    defaults={'amount': total, 'paid': False, 'balance': 0, 'date_paid' : datetime.now(), 'date_due' : datetime.now()}
+                    landlord=tenant.landlord,
+                    defaults={'amount': total, 'paid': 0, 'balance': 0, 'date_paid': timezone.now(), 'date_due': timezone.now()}
                 )
 
-            return JsonResponse({'utilities': utilities_data, 'total_utility_cost': total_utility_cost}, status=201)
+            return JsonResponse({'utilities': utilities_data, 'total_utility_cost': total_utility_cost, 'total': total}, status=201)
 
         except Tenant.DoesNotExist:
             return JsonResponse({"error": "Tenant not found"}, status=404)
@@ -697,7 +705,7 @@ def delete_utilities(request, utilities_id, tenant_id):
         utility.delete()
 
         total_utility_cost = Utilities.objects.filter(tenant=tenant).aggregate(total=Sum('utility_cost'))['total']
-        total_rent = Utilities.objects.filter(tenant=tenant).aggregate(total=Sum('rent'))['total']
+        total_rent = utility.rent
 
         if total_utility_cost is None:
             total_utility_cost = 0
@@ -706,6 +714,7 @@ def delete_utilities(request, utilities_id, tenant_id):
             total_rent = 0  
 
         total = total_utility_cost + total_rent
+        print(total_rent)
 
         Payments.objects.filter(tenant=tenant).update(amount=total)
 
