@@ -520,9 +520,10 @@ def tenant_detail(request, tenant_id):
     except Tenant.DoesNotExist:
         return JsonResponse({'error': 'Tenant not found'}, status=404)
 
-def get_dynamic_date():
+
+def get_dynamic_date(date_moved_in):
     current_date = timezone.now()
-    
+
     current_year = current_date.year
     current_month = current_date.month
     
@@ -530,11 +531,30 @@ def get_dynamic_date():
     if next_month > 12:
         next_month = 1
         current_year += 1
+
+    move_in_day = date_moved_in.day
     
-    
-    specific_date = datetime(current_year, next_month, 5) 
-    
+    try:
+        specific_date = datetime(current_year, next_month, move_in_day)
+    except ValueError:
+        import calendar
+        last_day_of_next_month = calendar.monthrange(current_year, next_month)[1]
+        specific_date = datetime(current_year, next_month, last_day_of_next_month)
+
     return specific_date
+
+def remainder_email(date_moved_in, tenant):
+    specific_date = get_dynamic_date(tenant.date_moved_in)
+    reminder_date = specific_date - timedelta(days=5)
+
+    if timezone.now().date() == reminder_date.date():
+        send_mail(
+            'Payment remainder',
+            f'Hello {tenant.first_name},\n\nThis is a reminder that the rent is due in 5 Days.',
+            settings.EMAIL_HOST_USER,
+            [tenant.email],
+            fail_silently=False,
+             )
 
 
 def payments(request, tenant_id):
@@ -561,7 +581,7 @@ def payments(request, tenant_id):
 
             new_balance = sum(utility.total for utility in utilities)
 
-            if timezone.now().date() == get_dynamic_date().date():
+            if timezone.now().date() == get_dynamic_date(tenant.date_moved_in).date():
                 balance = total_amount_due
             else:
                 balance = new_balance
@@ -575,6 +595,8 @@ def payments(request, tenant_id):
                 date_due=get_dynamic_date(),
                 date_paid=timezone.now()
             )
+
+            remainder_email(tenant.date_moved_in, tenant)
 
             cl = MpesaClient() 
             phone_number = tenant.phone
