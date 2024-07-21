@@ -7,10 +7,14 @@ import Footer from './Components/footer';
 
 const Property = () => {
   const [number_of_houses, setNumberOfHouses] = useState(0);
+  const [number_of_single_rooms, setNumberOfSingleRooms] = useState(0);
+  const [number_of_bedsitters, setNumberOfBedsitters] = useState(0);
   const [number_of_1_bedroom_houses, setNumberOf1BedroomHouses] = useState(0);
   const [number_of_2_bedroom_houses, setNumberOf2BedroomHouses] = useState(0);
   const [number_of_3_bedroom_houses, setNumberOf3BedroomHouses] = useState(0);
   const [number_of_4_bedroom_houses, setNumberOf4BedroomHouses] = useState(0);
+  const [base_rent_single_room, setBaseRentSingleRoom] = useState(0);
+  const [base_rent_bedsitter, setBaseRentBedsitter] = useState(0);
   const [base_rent_1_bedroom, setBaseRent1Bedroom] = useState(0);
   const [base_rent_2_bedroom, setBaseRent2Bedroom] = useState(0);
   const [base_rent_3_bedroom, setBaseRent3Bedroom] = useState(0);
@@ -51,10 +55,14 @@ const Property = () => {
     e.preventDefault();
     const formData = {
       number_of_houses,
+      number_of_single_rooms,
+      number_of_bedsitters,
       number_of_1_bedroom_houses,
       number_of_2_bedroom_houses,
       number_of_3_bedroom_houses,
       number_of_4_bedroom_houses,
+      base_rent_single_room,
+      base_rent_bedsitter,
       base_rent_1_bedroom,
       base_rent_2_bedroom,
       base_rent_3_bedroom,
@@ -90,11 +98,15 @@ const Property = () => {
   };
 
   const resetForm = () => {
+    setBaseRentSingleRoom(0);
+    setBaseRentBedsitter(0);
     setBaseRent1Bedroom(0);
     setBaseRent2Bedroom(0);
     setBaseRent3Bedroom(0);
     setBaseRent4Bedroom(0);
     setNumberOfHouses(0);
+    setNumberOfSingleRooms(0);
+    setNumberOfBedsitters(0);
     setNumberOf1BedroomHouses(0);
     setNumberOf2BedroomHouses(0);
     setNumberOf3BedroomHouses(0);
@@ -125,6 +137,62 @@ const Property = () => {
               />
             </div>
             <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="number_of_single_rooms">
+                  Number of Singles
+                </label>
+                <input
+                  type="number"
+                  id="number_of_single_rooms"
+                  name="number_of_single_rooms"
+                  value={number_of_single_rooms}
+                  onChange={(e) => setNumberOfSingleRooms(e.target.value)}
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="base_rent_single_room">
+                  Base Rent for Singles
+                </label>
+                <input
+                  type="number"
+                  id="base_rent_single_room"
+                  name="base_rent_single_room"
+                  value={base_rent_single_room}
+                  onChange={(e) => setBaseRentSingleRoom(e.target.value)}
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="number_of_bedsitters">
+                  Number of Bedsitters
+                </label>
+                <input
+                  type="number"
+                  id="number_of_bedsitters"
+                  name="number_of_bedsitters"
+                  value={number_of_bedsitters}
+                  onChange={(e) => setNumberOfBedsitters(e.target.value)}
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="base_rent_bedsitter">
+                  Base Rent for Bedsitters
+                </label>
+                <input
+                  type="number"
+                  id="base_rent_bedsitter"
+                  name="base_rent_bedsitter"
+                  value={base_rent_bedsitter}
+                  onChange={(e) => setBaseRentBedsitter(e.target.value)}
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  required
+                />
+              </div>
               <div>
                 <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="number_of_1_bedroom_houses">
                   Number of 1 Bedroom Houses

@@ -52,7 +52,8 @@ class Landlord(models.Model):
 
 class Property(models.Model):
     landlord = models.ForeignKey(Landlord, on_delete=models.CASCADE, related_name='properties')
-    property_name = models.CharField(max_length=100, unique = True) 
+    property_name = models.CharField(max_length=100, unique = True)
+    location = models.CharField(max_length=100)
 
     def __str__(self):
         return self.property_name
@@ -81,8 +82,8 @@ class HouseDetails(models.Model):
         return f'{self.tenant.first_name} - {self.bedroom_count} Bedrooms'
 
 class Payments(models.Model):
-    tenant = models.ForeignKey(Tenant, on_delete = models.CASCADE,db_column='house_number')
-    landlord = models.ForeignKey(Landlord, on_delete = models.CASCADE)
+    tenant = models.ForeignKey(Tenant,on_delete=models.CASCADE, db_column='house_number')
+    landlord = models.ForeignKey(Landlord, on_delete = models.PROTECT)
     amount = models.DecimalField(max_digits = 10, decimal_places = 2)
     paid = models.DecimalField(max_digits = 10, decimal_places = 2)
     balance = models.DecimalField(max_digits = 10, decimal_places = 2)
@@ -106,11 +107,15 @@ class Utilities(models.Model):
 class PropertyDetails(models.Model):
     property = models.OneToOneField(Property, on_delete=models.CASCADE, related_name='details')
     number_of_houses = models.IntegerField()
+    number_of_single_rooms = models.IntegerField(default=0)
+    number_of_bedsitters = models.IntegerField(default=0)
     number_of_1_bedroom_houses = models.IntegerField(default=0)
     number_of_2_bedroom_houses = models.IntegerField(default=0)
     number_of_3_bedroom_houses = models.IntegerField(default=0)
     number_of_4_bedroom_houses = models.IntegerField(default=0)
     
+    base_rent_single_room = models.DecimalField(max_digits=10,decimal_places=2,default=0)
+    base_rent_bedsitter = models.DecimalField(max_digits=10,decimal_places=2,default=0)
     base_rent_1_bedroom = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     base_rent_2_bedroom = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     base_rent_3_bedroom = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -124,7 +129,7 @@ class PropertyDetails(models.Model):
 
 class PaymentsReceived(models.Model):
     landlord = models.ForeignKey(Landlord, on_delete = models.CASCADE)
-    tenant = models.ForeignKey(Tenant, on_delete = models.CASCADE,db_column='house_number')
+    tenant = models.ForeignKey(Tenant,on_delete=models.CASCADE, db_column='house_number')
     amount = models.ForeignKey(Payments, on_delete = models.CASCADE)
     balance = models.DecimalField(max_digits =  10,decimal_places = 2,default = 0)
     total_amount = models.DecimalField(max_digits = 10, decimal_places = 2)

@@ -199,10 +199,11 @@ def property(request,landlord_id):
             landlord = Landlord.objects.get(id=landlord_id)
             data = json.loads(request.body)
             property_name = data.get('property_name')
+            location =data.get('property_location')
             print(data)
 
             if property_name:
-                new_property = Property.objects.create(landlord = landlord, property_name = property_name)
+                new_property = Property.objects.create(landlord = landlord, property_name = property_name,location=location)
                 property_data = {"property_name" : property_name, "landlord": new_property.landlord.id, "property_id" : new_property.id}
 
                 return JsonResponse({"property" : property_data})
@@ -232,26 +233,35 @@ def property_details(request, landlord_id, property_id):
 
         data = json.loads(request.body)
         number_of_houses = int(data.get('number_of_houses'))
+        number_of_single_rooms = int(data.get('number_of_single_rooms'))
+        number_of_bedsitters = int(data.get('number_of_bedsitters'))
         number_of_1_bedroom_houses = int(data.get('number_of_1_bedroom_houses'))
         number_of_2_bedroom_houses = int(data.get('number_of_2_bedroom_houses'))
         number_of_3_bedroom_houses = int(data.get('number_of_3_bedroom_houses'))
         number_of_4_bedroom_houses = int(data.get('number_of_4_bedroom_houses'))
 
+        base_rent_single_room = data.get('base_rent_single_room')
+        base_rent_bedsitter = data.get('base_rent_bedsitter')
         base_rent_1_bedroom = data.get('base_rent_1_bedroom')
         base_rent_2_bedroom = data.get('base_rent_2_bedroom')
         base_rent_3_bedroom = data.get('base_rent_3_bedroom')
         base_rent_4_bedroom = data.get('base_rent_4_bedroom')
 
-        total_houses = number_of_1_bedroom_houses + number_of_2_bedroom_houses + number_of_3_bedroom_houses + number_of_4_bedroom_houses
+        total_houses = (number_of_single_rooms + number_of_bedsitters + number_of_1_bedroom_houses +
+                        number_of_2_bedroom_houses + number_of_3_bedroom_houses + number_of_4_bedroom_houses)
 
         if number_of_houses == total_houses:
             property_details = PropertyDetails.objects.create(
                 property = property,
                 number_of_houses = number_of_houses,
+                number_of_single_rooms = number_of_single_rooms,
+                number_of_bedsitters = number_of_bedsitters,
                 number_of_1_bedroom_houses = number_of_1_bedroom_houses,
                 number_of_2_bedroom_houses = number_of_2_bedroom_houses,
                 number_of_3_bedroom_houses = number_of_3_bedroom_houses,
                 number_of_4_bedroom_houses = number_of_4_bedroom_houses,
+                base_rent_bedsitter = base_rent_bedsitter,
+                base_rent_single_room = base_rent_single_room,
                 base_rent_1_bedroom = base_rent_1_bedroom,
                 base_rent_2_bedroom = base_rent_2_bedroom,
                 base_rent_3_bedroom = base_rent_3_bedroom,
@@ -260,6 +270,8 @@ def property_details(request, landlord_id, property_id):
 
             property_details_data = {
                     "Number of houses": property_details.number_of_houses,
+                    "Number of single rooms" : property_details.number_of_single_rooms,
+                    "Number of Bed sitters" : property_details.number_of_bedsitters,
                     "Number of 1 bedroom": property_details.number_of_1_bedroom_houses,
                     "Number of 2 bedroom": property_details.number_of_2_bedroom_houses,
                     "Number of 3 bedroom": property_details.number_of_3_bedroom_houses,
@@ -304,19 +316,20 @@ def house_details(request, property_id, tenant_id):
             data = json.loads(request.body)
             bedroom_count = data.get("bedroomCount")
 
-            if bedroom_count not in ["1", "2", "3", "4"]:
+            if bedroom_count not in ["single_room", "bedsitter", "1", "2", "3", "4"]:
                 return JsonResponse({"error": "Invalid bedroom count"}, status=400)
 
-            base_rent = None
-            if bedroom_count == "1":
-                base_rent = property_details.base_rent_1_bedroom
-            elif bedroom_count == "2":
-                base_rent = property_details.base_rent_2_bedroom
-            elif bedroom_count == "3":
-                base_rent = property_details.base_rent_3_bedroom
-            elif bedroom_count == "4":
-                base_rent = property_details.base_rent_4_bedroom
-            else:
+            rent_dict = {
+                "single_room": property_details.base_rent_single_room,
+                "bedsitter": property_details.base_rent_bedsitter,
+                "1": property_details.base_rent_1_bedroom,
+                "2": property_details.base_rent_2_bedroom,
+                "3": property_details.base_rent_3_bedroom,
+                "4": property_details.base_rent_4_bedroom
+            }
+
+            base_rent = rent_dict.get(bedroom_count)
+            if base_rent is None:
                 return JsonResponse({"error": "Bedroom count not supported"}, status=400)
 
             house_detail = HouseDetails.objects.create(
@@ -328,9 +341,9 @@ def house_details(request, property_id, tenant_id):
             return JsonResponse({
                 "message": "House details created successfully",
                 "house_details": {
-                    "tenant": house_detail.tenant.first_name,  # Assuming Tenant has a 'name' field
+                    "tenant": house_detail.tenant.first_name,
                     "bedroom_count": house_detail.bedroom_count,
-                    "base_rent": str(house_detail.base_rent)  # Convert to string for JSON serialization
+                    "base_rent": str(house_detail.base_rent)
                 }
             }, status=201)
 
@@ -831,6 +844,8 @@ def utilities(request, property_id, tenant_id):
                 return JsonResponse({"error": "Fill all the fields or no available rents"}, status=400)
 
             rent_dict = {
+                "single_room": property_details.base_rent_single_room,
+                "bedsitter": property_details.base_rent_bedsitter,
                 "1": property_details.base_rent_1_bedroom,
                 "2": property_details.base_rent_2_bedroom,
                 "3": property_details.base_rent_3_bedroom,
