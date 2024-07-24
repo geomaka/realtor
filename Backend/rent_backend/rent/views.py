@@ -225,11 +225,12 @@ def property(request,landlord_id):
 
 def property_details(request, landlord_id, property_id):
     if request.method == "POST":
+        # Handling POST requests (create new property details)
         try:
             landlord = Landlord.objects.get(id=landlord_id)
             property = Property.objects.get(id=property_id)
         except Landlord.DoesNotExist or Property.DoesNotExist:
-            return JsonResponse({"error":"Does not exist"},status =  404)
+            return JsonResponse({"error": "Landlord or Property does not exist"}, status=404)
 
         data = json.loads(request.body)
         number_of_houses = int(data.get('number_of_houses'))
@@ -251,42 +252,111 @@ def property_details(request, landlord_id, property_id):
                         number_of_2_bedroom_houses + number_of_3_bedroom_houses + number_of_4_bedroom_houses)
 
         if number_of_houses == total_houses:
-            property_details = PropertyDetails.objects.create(
-                property = property,
-                number_of_houses = number_of_houses,
-                number_of_single_rooms = number_of_single_rooms,
-                number_of_bedsitters = number_of_bedsitters,
-                number_of_1_bedroom_houses = number_of_1_bedroom_houses,
-                number_of_2_bedroom_houses = number_of_2_bedroom_houses,
-                number_of_3_bedroom_houses = number_of_3_bedroom_houses,
-                number_of_4_bedroom_houses = number_of_4_bedroom_houses,
-                base_rent_bedsitter = base_rent_bedsitter,
-                base_rent_single_room = base_rent_single_room,
-                base_rent_1_bedroom = base_rent_1_bedroom,
-                base_rent_2_bedroom = base_rent_2_bedroom,
-                base_rent_3_bedroom = base_rent_3_bedroom,
-                base_rent_4_bedroom = base_rent_4_bedroom
+            property_details, created = PropertyDetails.objects.update_or_create(
+                property=property,
+                defaults={
+                    'number_of_houses': number_of_houses,
+                    'number_of_single_rooms': number_of_single_rooms,
+                    'number_of_bedsitters': number_of_bedsitters,
+                    'number_of_1_bedroom_houses': number_of_1_bedroom_houses,
+                    'number_of_2_bedroom_houses': number_of_2_bedroom_houses,
+                    'number_of_3_bedroom_houses': number_of_3_bedroom_houses,
+                    'number_of_4_bedroom_houses': number_of_4_bedroom_houses,
+                    'base_rent_bedsitter': base_rent_bedsitter,
+                    'base_rent_single_room': base_rent_single_room,
+                    'base_rent_1_bedroom': base_rent_1_bedroom,
+                    'base_rent_2_bedroom': base_rent_2_bedroom,
+                    'base_rent_3_bedroom': base_rent_3_bedroom,
+                    'base_rent_4_bedroom': base_rent_4_bedroom
+                }
             )
 
             property_details_data = {
-                    "Number of houses": property_details.number_of_houses,
-                    "Number of single rooms" : property_details.number_of_single_rooms,
-                    "Number of Bed sitters" : property_details.number_of_bedsitters,
-                    "Number of 1 bedroom": property_details.number_of_1_bedroom_houses,
-                    "Number of 2 bedroom": property_details.number_of_2_bedroom_houses,
-                    "Number of 3 bedroom": property_details.number_of_3_bedroom_houses,
-                    "Number of 4 bedroom": property_details.number_of_4_bedroom_houses,
-                    "Rent 1 bedroom": property_details.base_rent_1_bedroom,
-                    "Rent 2 bedroom": property_details.base_rent_2_bedroom,
-                    "Rent 3 bedroom": property_details.base_rent_3_bedroom,
-                    "Rent 4 bedroom": property_details.base_rent_4_bedroom,
-                    "property": property_details.property.id
-                }
+                "Number of houses": property_details.number_of_houses,
+                "Number of single rooms": property_details.number_of_single_rooms,
+                "Number of Bed sitters": property_details.number_of_bedsitters,
+                "Number of 1 bedroom": property_details.number_of_1_bedroom_houses,
+                "Number of 2 bedroom": property_details.number_of_2_bedroom_houses,
+                "Number of 3 bedroom": property_details.number_of_3_bedroom_houses,
+                "Number of 4 bedroom": property_details.number_of_4_bedroom_houses,
+                "Rent 1 bedroom": property_details.base_rent_1_bedroom,
+                "Rent 2 bedroom": property_details.base_rent_2_bedroom,
+                "Rent 3 bedroom": property_details.base_rent_3_bedroom,
+                "Rent 4 bedroom": property_details.base_rent_4_bedroom,
+                "property": property_details.property.id
+            }
 
-            return JsonResponse({"Property_details" : property_details_data},status=201)
+            return JsonResponse({"Property_details": property_details_data}, status=201)
         else:
-            return JsonResponse({"message" : "Number of houses are not equal"})
+            return JsonResponse({"message": "Number of houses does not match the total"}, status=400)
+
+    elif request.method == "PUT":
+        # Handling PUT requests (update existing property details)
+        try:
+            landlord = Landlord.objects.get(id=landlord_id)
+            property = Property.objects.get(id=property_id)
+            property_details = PropertyDetails.objects.get(property=property)
+        except Landlord.DoesNotExist or Property.DoesNotExist:
+            return JsonResponse({"error": "Landlord or Property does not exist"}, status=404)
+        except PropertyDetails.DoesNotExist:
+            return JsonResponse({"error": "Property details not found"}, status=404)
+
+        data = json.loads(request.body)
+        number_of_houses = int(data.get('number_of_houses'))
+        number_of_single_rooms = int(data.get('number_of_single_rooms'))
+        number_of_bedsitters = int(data.get('number_of_bedsitters'))
+        number_of_1_bedroom_houses = int(data.get('number_of_1_bedroom_houses'))
+        number_of_2_bedroom_houses = int(data.get('number_of_2_bedroom_houses'))
+        number_of_3_bedroom_houses = int(data.get('number_of_3_bedroom_houses'))
+        number_of_4_bedroom_houses = int(data.get('number_of_4_bedroom_houses'))
+
+        base_rent_single_room = data.get('base_rent_single_room')
+        base_rent_bedsitter = data.get('base_rent_bedsitter')
+        base_rent_1_bedroom = data.get('base_rent_1_bedroom')
+        base_rent_2_bedroom = data.get('base_rent_2_bedroom')
+        base_rent_3_bedroom = data.get('base_rent_3_bedroom')
+        base_rent_4_bedroom = data.get('base_rent_4_bedroom')
+
+        total_houses = (number_of_single_rooms + number_of_bedsitters + number_of_1_bedroom_houses +
+                        number_of_2_bedroom_houses + number_of_3_bedroom_houses + number_of_4_bedroom_houses)
+
+        if number_of_houses == total_houses:
+            property_details.number_of_houses = number_of_houses
+            property_details.number_of_single_rooms = number_of_single_rooms
+            property_details.number_of_bedsitters = number_of_bedsitters
+            property_details.number_of_1_bedroom_houses = number_of_1_bedroom_houses
+            property_details.number_of_2_bedroom_houses = number_of_2_bedroom_houses
+            property_details.number_of_3_bedroom_houses = number_of_3_bedroom_houses
+            property_details.number_of_4_bedroom_houses = number_of_4_bedroom_houses
+            property_details.base_rent_single_room = base_rent_single_room
+            property_details.base_rent_bedsitter = base_rent_bedsitter
+            property_details.base_rent_1_bedroom = base_rent_1_bedroom
+            property_details.base_rent_2_bedroom = base_rent_2_bedroom
+            property_details.base_rent_3_bedroom = base_rent_3_bedroom
+            property_details.base_rent_4_bedroom = base_rent_4_bedroom
+            property_details.save()
+
+            property_details_data = {
+                "Number of houses": property_details.number_of_houses,
+                "Number of single rooms": property_details.number_of_single_rooms,
+                "Number of Bed sitters": property_details.number_of_bedsitters,
+                "Number of 1 bedroom": property_details.number_of_1_bedroom_houses,
+                "Number of 2 bedroom": property_details.number_of_2_bedroom_houses,
+                "Number of 3 bedroom": property_details.number_of_3_bedroom_houses,
+                "Number of 4 bedroom": property_details.number_of_4_bedroom_houses,
+                "Rent 1 bedroom": property_details.base_rent_1_bedroom,
+                "Rent 2 bedroom": property_details.base_rent_2_bedroom,
+                "Rent 3 bedroom": property_details.base_rent_3_bedroom,
+                "Rent 4 bedroom": property_details.base_rent_4_bedroom,
+                "property": property_details.property.id
+            }
+
+            return JsonResponse({"Property_details": property_details_data}, status=200)
+        else:
+            return JsonResponse({"message": "Number of houses does not match the total"}, status=400)
+
     else:
+        # Handling GET requests (retrieve existing property details)
         try:
             property = Property.objects.get(id=property_id)
             property_details = PropertyDetails.objects.get(property=property)

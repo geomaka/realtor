@@ -66,7 +66,7 @@ const Property = () => {
       base_rent_1_bedroom,
       base_rent_2_bedroom,
       base_rent_3_bedroom,
-      base_rent_4_bedroom,
+      base_rent_4_bedroom
     };
 
     try {
