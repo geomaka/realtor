@@ -225,7 +225,6 @@ def property(request,landlord_id):
 
 def property_details(request, landlord_id, property_id):
     if request.method == "POST":
-        # Handling POST requests (create new property details)
         try:
             landlord = Landlord.objects.get(id=landlord_id)
             property = Property.objects.get(id=property_id)
@@ -291,7 +290,6 @@ def property_details(request, landlord_id, property_id):
             return JsonResponse({"message": "Number of houses does not match the total"}, status=400)
 
     elif request.method == "PUT":
-        # Handling PUT requests (update existing property details)
         try:
             landlord = Landlord.objects.get(id=landlord_id)
             property = Property.objects.get(id=property_id)
@@ -356,7 +354,6 @@ def property_details(request, landlord_id, property_id):
             return JsonResponse({"message": "Number of houses does not match the total"}, status=400)
 
     else:
-        # Handling GET requests (retrieve existing property details)
         try:
             property = Property.objects.get(id=property_id)
             property_details = PropertyDetails.objects.get(property=property)
