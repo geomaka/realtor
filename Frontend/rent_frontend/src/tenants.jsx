@@ -3,6 +3,7 @@ import Header from "./Components/header";
 import { Link, useParams } from "react-router-dom";
 import user from "../public/user.svg";
 import DeleteTenant from "./delete";
+import Footer from "./Components/footer";
 
 function Tenants() {
   const [tenants, setTenants] = useState([]);
@@ -48,8 +49,7 @@ function Tenants() {
             <button
               key={index}
               onClick={() => handleFilterClick(property)}
-              className={`px-4 py-2 rounded text-black font-semibold transition-colors duration-300 ease-in-out 
-                ${isSelected ? 'bg-blue-500 text-black' : 'bg-blue-500  text-white'}`}
+              className={`py-2.5 px-5 me-2 mb-2 text-sm font-medium ${isSelected ? 'text-blue-700 bg-gray-100' : 'text-gray-900 bg-white'} border border-gray-200 rounded-full focus:outline-none hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-blue-500 dark:bg-blue-500 dark:text-black dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700`}
             >
               {property}
               {isSelected && (
@@ -104,6 +104,7 @@ function Tenants() {
           </div>
         </div>
       </div>
+      < Footer />
     </>
   );
 }
