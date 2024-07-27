@@ -48,6 +48,7 @@ function AdminSignupForm() {
       paybill_number: payment_type === 'paybill' ? paybill_number : null,
       account_number: payment_type === 'paybill' ? account_number : null,
     };
+    console.log(JSON.stringify(data))
 
     fetch('http://localhost:8000/rent/adminsignup', {
       method: 'POST',
@@ -58,14 +59,12 @@ function AdminSignupForm() {
     })
       .then((res) => {
         if (!res.ok) {
-          // Handle HTTP errors
           throw new Error(`HTTP error! Status: ${res.status}`);
         }
         return res.json();
       })
       .then((data) => {
         if (data.error) {
-          // Handle API errors
           setErrorMessage(data.error);
         } else {
           let id = data.landlord_id;
@@ -73,7 +72,6 @@ function AdminSignupForm() {
         }
       })
       .catch((error) => {
-        // Handle fetch errors or any other errors
         setErrorMessage(error.message);
       });
   };
