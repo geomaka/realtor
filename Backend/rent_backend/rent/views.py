@@ -604,8 +604,32 @@ def reset_password(request):
 def tenants(request,landlord_id):
     try:
         landlord = Landlord.objects.get(id=landlord_id)
-        tenants = list(Tenant.objects.filter(landlord=landlord).values())
-        return JsonResponse({'tenants' : tenants})
+        tenant = Tenant.objects.filter(landlord=landlord_id)
+        tenants_list = []
+        for tenant_instance in tenant:
+            property_id = tenant_instance.property_id
+            
+            try:
+                property_living_in = Property.objects.get(id=property_id)
+                property_details = {
+                    "property_name": property_living_in.property_name
+                }
+            except Property.DoesNotExist:
+                property_details = {
+                    "property_name": "Property not found"
+                }
+
+            tenants_list.append({
+                "house_number": tenant_instance.house_number,
+                "first_name": tenant_instance.first_name,
+                "last_name": tenant_instance.last_name,
+                "email": tenant_instance.email,
+                "phone": tenant_instance.phone,
+                "password": tenant_instance.password,
+                "date_moved_in": tenant_instance.date_moved_in,
+                "property_details": property_details
+            })
+        return JsonResponse({'tenants' : tenants_list})
 
     except Landlord.DoesNotExist:
         return JsonResponse({'error' 'landlord not found'},status = 404)

@@ -26,9 +26,9 @@ function TenantHeader() {
                         <FaBars size={24} />
                     </button>
                     <ul className={`sm:flex sm:gap-4 ${isDropdownOpen ? 'block' : 'hidden'} sm:block absolute sm:static top-12 right-0 sm:top-auto sm:right-auto bg-white sm:bg-transparent text-center sm:text-left shadow-lg rounded-lg sm:shadow-none sm:rounded-none`}>
-                        <Link to={`/${tenantID}/${propertyID}/utilities`} className='block sm:inline text-slate-700 hover:underline p-2 sm:p-0'>
+                        {/* <Link to={`/${tenantID}/${propertyID}/utilities`} className='block sm:inline text-slate-700 hover:underline p-2 sm:p-0'>
                             <li>Utilities</li>
-                        </Link>
+                        </Link> */}
                         <Link to={`/${tenantID}/my-account`} className='block sm:inline text-slate-700 hover:underline p-2 sm:p-0'>
                             <li>Account</li>
                         </Link>

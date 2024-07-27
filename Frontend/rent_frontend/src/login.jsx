@@ -44,11 +44,11 @@ function Login() {
                 }
                 if (data.role == 'landlord') {
                     let id = data.landlordID
-                    navigate(`/${id}/tenants`)
+                    navigate(`/${id}/tenants`);
                 } else if (data.role == "tenant") {
                     let id = data.tenantID
                     let propertyID = data.propertyID
-                    navigate(`/${id}/${propertyID}`)
+                    navigate(`/${id}/${propertyID}`);
                 }
                 else{
                     setError(data.error)
