@@ -715,7 +715,7 @@ def generate_access_token():
         print(f"Error generating access token: {e}")
         return None
 
-def mpesa_express_payment(phone_number, amount, reference, description):
+def mpesa_express_payment(id,phone_number, amount, reference, description):
     endpoint = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
     access_token = generate_access_token()
     print(access_token)
@@ -736,7 +736,7 @@ def mpesa_express_payment(phone_number, amount, reference, description):
         'PartyA': phone_number,
         'PartyB': settings.MPESA_SHORTCODE,
         'PhoneNumber': phone_number,
-        'CallBackURL': 'http://localhost:8000/rent/tenants/B20/payments', 
+        'CallBackURL': f'https://realtor-1-kllo.onrender.com/rent/tenants/{id}/payments', 
         'AccountReference': reference,
         'TransactionDesc': description
     }
@@ -749,7 +749,7 @@ def mpesa_express_payment(phone_number, amount, reference, description):
         print(f"Error making M-Pesa payment request: {e}")
         return {'error': str(e)}
 
-def mpesa_till_payment(phone_number, amount, reference, description):
+def mpesa_till_payment(id,phone_number, amount, reference, description):
     endpoint = 'https://sandbox.safaricom.co.ke/mpesa/b2b/v1/paymentrequest'
     headers = {
         'Authorization': f'Bearer {generate_access_token()}',
@@ -764,8 +764,8 @@ def mpesa_till_payment(phone_number, amount, reference, description):
         'PartyA': settings.MPESA_SHORTCODE,
         'PartyB': phone_number,
         'Remarks': description,
-        'QueueTimeOutURL': 'https://your-queue-timeout-url.com',  # Replace with your queue timeout URL
-        'ResultURL': 'https://your-result-url.com',  # Replace with your result URL
+        'QueueTimeOutURL': f'https://realtor-1-kllo.onrender.com/rent/tenants/{id}/payments',  # Replace with your queue timeout URL
+        'ResultURL': f'https://realtor-1-kllo.onrender.com/rent/tenants/{id}/payments', 
         'AccountReference': reference,
         'TransactionDesc': description
     }
@@ -812,6 +812,7 @@ def payments(request, tenant_id):
             if landlord.paybill_number:
                 print(amount_paid)
                 response = mpesa_express_payment(
+                    tenant.id,
                     phone,
                     amount_paid,
                     f"Payment for {tenant.first_name} {tenant.last_name}",
@@ -819,6 +820,7 @@ def payments(request, tenant_id):
                 )
             elif landlord.till_number:
                 mpesa_till_payment(
+                tenant.id,
                  phone,
                  amount_paid,
                  f"Payment for {tenant.first_name} {tenant.last_name}",
