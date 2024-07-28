@@ -12,7 +12,7 @@ function HomePage() {
                 <div className="bg-cover bg-[url('/public/pexels-rickyrecap-2556001.svg')] bg-center bg-no-repeat h-full w-full" >
                     <div className="container mx-auto flex flex-col my-auto align-middle h-full" >
                         <div className='my-auto  mx-auto lg:mx-0 w-10/12 lg:w-2/5'>
-                            <h1 className="text-7xl mb-4 text-white"><span className='text-blue-500'>Welcome</span> to Rent_Ease</h1>
+                            <h1 className="text-7xl mb-4 text-white"><span className='text-blue-500'>Welcome</span> to Rent_Easy</h1>
                             <p className="text-2xl mb-8 text-white">Manage your houses and tenants in one place</p>
                             <div className='flex items-center'>
                                 <Link to={'/admin-signup'}>

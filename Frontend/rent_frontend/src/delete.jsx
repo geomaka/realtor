@@ -3,7 +3,7 @@ import React from "react";
 function DeleteTenant({ tenant }) {
     const deleteTenant = (e) => {
         e.preventDefault()
-        fetch(`http://localhost:8000/rent/tenants/${tenant.house_number}/confirmdelete`, {
+        fetch(`https://realtor-1-kllo.onrender.com/rent/tenants/${tenant.house_number}/confirmdelete`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',

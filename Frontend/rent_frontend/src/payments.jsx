@@ -12,7 +12,7 @@ function Payments() {
   console.log(tenantID)
 
   const fetchPayments = async () => {
-    let response = await fetch(`http://localhost:8000/rent/tenants/${tenantID}/payments`)
+    let response = await fetch(`https://realtor-1-kllo.onrender.com/rent/tenants/${tenantID}/payments`)
     let data = await response.json()
     setPayments(data.payments)
     console.log(payments)
@@ -27,14 +27,14 @@ function Payments() {
     let data_to_be_posted = {
       amount
     }
-    fetch(`http://localhost:8000/rent/tenants/${tenantID}/payments`, {
+    fetch(`https://realtor-1-kllo.onrender.com/rent/tenants/${tenantID}/payments`, {
       method: "POST",
       body: JSON.stringify(data_to_be_posted),
       headers: { 'Content-Type': 'application/json' }
     })
       .then((res) => res.json())
       .then((data) => {
-        setPayments([data.data])
+        setPayments(data.data)
         fetchPayments()
         console.log(data)
       })

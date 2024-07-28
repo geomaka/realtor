@@ -18,10 +18,8 @@ function AdminSignupForm() {
   const createUser = (e) => {
     e.preventDefault();
 
-    // Clear previous error message
     setErrorMessage('');
 
-    // Client-side validation
     if (!first_name || !last_name || !phone || !email || !password) {
       setErrorMessage('All fields are required.');
       return;
@@ -50,7 +48,7 @@ function AdminSignupForm() {
     };
     console.log(JSON.stringify(data))
 
-    fetch('http://localhost:8000/rent/adminsignup', {
+    fetch('https://realtor-1-kllo.onrender.com/rent/adminsignup', {
       method: 'POST',
       body: JSON.stringify(data),
       headers: {

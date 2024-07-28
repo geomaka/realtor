@@ -19,7 +19,7 @@ function Utilities() {
   };
 
   const getBedroomCount = async () =>{
-    const response = await fetch (`http://localhost:8000/rent/${propertyID}/${tenantID}/house_details`)
+    const response = await fetch (`https://realtor-1-kllo.onrender.com/rent/${propertyID}/${tenantID}/house_details`)
     const data = await response.json()
     console.log(data)
     setBedroomCount(data.bedroom_count)
@@ -31,7 +31,7 @@ function Utilities() {
 
   const deleteUtility = async (utilityID, tenantID) => {
     try {
-      let response = await fetch(`http://localhost:8000/rent/${tenantID}/delete-utilities/${utilityID}`, {
+      let response = await fetch(`https://realtor-1-kllo.onrender.com/rent/${tenantID}/delete-utilities/${utilityID}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" }
       });
@@ -67,7 +67,7 @@ function Utilities() {
     const dataToBePosted = { bedroomCount,inputFields };
     let jsonData = JSON.stringify(dataToBePosted)
     console.log(jsonData);
-    axios.post(`http://localhost:8000/rent/${tenantID}/${propertyID}/add-utilities`, dataToBePosted)
+    axios.post(`https://realtor-1-kllo.onrender.com/rent/${tenantID}/${propertyID}/add-utilities`, dataToBePosted)
       .then(response => {
         setUtilities(response.data.utilities)
         setTotal(response.data.total)

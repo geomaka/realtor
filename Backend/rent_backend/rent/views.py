@@ -812,7 +812,7 @@ def payments(request, tenant_id):
             if landlord.paybill_number:
                 print(amount_paid)
                 response = mpesa_express_payment(
-                    tenant.id,
+                    tenant_id,
                     phone,
                     amount_paid,
                     f"Payment for {tenant.first_name} {tenant.last_name}",
@@ -820,7 +820,7 @@ def payments(request, tenant_id):
                 )
             elif landlord.till_number:
                 mpesa_till_payment(
-                tenant.id,
+                tenant_id,
                  phone,
                  amount_paid,
                  f"Payment for {tenant.first_name} {tenant.last_name}",

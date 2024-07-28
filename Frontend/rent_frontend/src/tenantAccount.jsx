@@ -12,7 +12,7 @@ function TenantAccount(){
     const {tenantID} = useParams()
 
     const fetchTenantDetails = async () =>{
-        let response = await fetch(`http://localhost:8000/rent/tenants/${tenantID}`)
+        let response = await fetch(`https://realtor-1-kllo.onrender.com/rent/tenants/${tenantID}`)
         let data = await response.json()
         console.log(data)
         setFirst(data.first_name)

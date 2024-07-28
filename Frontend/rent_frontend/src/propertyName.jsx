@@ -16,7 +16,7 @@ function PropertyName() {
             property_location
         };
 
-        fetch(`http://localhost:8000/rent/${landlordID}/property`, {
+        fetch(`https://realtor-1-kllo.onrender.com/rent/${landlordID}/property`, {
             method: 'POST',
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(propertyData)

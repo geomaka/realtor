@@ -18,7 +18,7 @@ function House() {
 
     const getProperty = async () => {
         try {
-            const response = await fetch(`http://localhost:8000/rent/${landlordID}/${propertyID}/property_details`);
+            const response = await fetch(`https://realtor-1-kllo.onrender.com/rent/${landlordID}/${propertyID}/property_details`);
             const data = await response.json();
             console.log(data.property_details);
             setNumber(data.property_details.number_of_houses)
@@ -62,7 +62,7 @@ function House() {
         }
     
         console.log(dataToBeUpdated)
-        const response = await fetch(`http://localhost:8000/rent/${landlordID}/${propertyID}/property_details`, {
+        const response = await fetch(`https://realtor-1-kllo.onrender.com/rent/${landlordID}/${propertyID}/property_details`, {
             method: 'PUT',
             body: JSON.stringify(dataToBeUpdated),
             headers: { 'Content-Type': 'application/json' },
@@ -82,7 +82,7 @@ function House() {
         };
 
         try {
-            const response = await fetch(`http://localhost:8000/rent/${propertyID}/${tenantID}/house_details`, {
+            const response = await fetch(`https://realtor-1-kllo.onrender.com/rent/${propertyID}/${tenantID}/house_details`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(dataToBePosted)
