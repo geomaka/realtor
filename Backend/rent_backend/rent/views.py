@@ -39,7 +39,6 @@ def index(request):
 def getCSRF(request):
     if request.method == "GET":
         csrf_token = get_token(request)
-        print(csrf_token)
         return JsonResponse({"csrfToken": csrf_token})
 
     else:
@@ -200,7 +199,6 @@ def property(request,landlord_id):
             data = json.loads(request.body)
             property_name = data.get('property_name')
             location =data.get('property_location')
-            print(data)
 
             if property_name:
                 new_property = Property.objects.create(landlord = landlord, property_name = property_name,location=location)
@@ -686,16 +684,16 @@ def remainder_email(date_moved_in, tenant):
 
 import base64
 import requests
+from decouple import config
 
 def generate_access_token():
     try:
-        consumer_key = settings.MPESA_CONSUMER_KEY
-        consumer_secret = settings.MPESA_CONSUMER_SECRET
+        consumer_key = config('MPESA_CONSUMER_KEY')
+        consumer_secret = config('MPESA_CONSUMER_SECRET')
         
         auth_string = f'{consumer_key}:{consumer_secret}'
         
         auth_base64 = base64.b64encode(auth_string.encode()).decode()
-
         headers = {
             'Authorization': f'Basic {auth_base64}',
             'Content-Type': 'application/json'
@@ -704,7 +702,6 @@ def generate_access_token():
         url = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
 
         response = requests.get(url, headers=headers)
-
         response.raise_for_status()
 
         access_token = response.json().get('access_token')
@@ -715,29 +712,34 @@ def generate_access_token():
         print(f"Error generating access token: {e}")
         return None
 
-def mpesa_express_payment(id,landlord,tenant,phone_number, amount, reference, description):
+def generate_password(number):
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+    password = base64.b64encode(f'{number}{settings.MPESA_PASSKEY}{timestamp}'.encode()).decode('utf-8')
+    return password
+
+
+def mpesa_express_payment(id,landlord,tenant,phone_number, amount, description):
     endpoint = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
     access_token = generate_access_token()
-    print(access_token)
     if not access_token:
         return {'error': 'Failed to obtain access token'}
 
     headers = {
-        'Authorization': 'Bearer 8yxSwTZQ74sirmipGK7jgsUIVVCY',
+        'Authorization': f'Bearer {access_token}',
         'Content-Type': 'application/json'
     }
 
     payload = {
         'BusinessShortCode': landlord.paybill_number,
-        'Password': generate_password(),
+        'Password': generate_password(landlord.paybill_number),
         'Timestamp': datetime.now().strftime('%Y%m%d%H%M%S'),
         'TransactionType': 'CustomerPayBillOnline',
         'Amount': amount,
         'PartyA': phone_number,
         'PartyB': landlord.paybill_number,
         'PhoneNumber': phone_number,
-        'CallBackURL': f'https://realtor-1-kllo.onrender.com/rent/tenants/{id}/payments', 
-        'AccountReference': reference,
+        'CallBackURL': f'https://rent-ease-jxhm.onrender.com/rent/tenants/{id}/payments', 
+        'AccountReference': landlord.account_number,
         'TransactionDesc': description
     }
 
@@ -749,7 +751,7 @@ def mpesa_express_payment(id,landlord,tenant,phone_number, amount, reference, de
         print(f"Error making M-Pesa payment request: {e}")
         return {'error': str(e)}
 
-def mpesa_till_payment(id,landlord,tenant,phone_number, amount, reference, description):
+def mpesa_till_payment(id,landlord,landlord_phone,tenant,phone_number, amount, reference, description):
     endpoint = 'https://sandbox.safaricom.co.ke/mpesa/b2b/v1/paymentrequest'
     headers = {
         'Authorization': f'Bearer {generate_access_token()}',
@@ -757,15 +759,15 @@ def mpesa_till_payment(id,landlord,tenant,phone_number, amount, reference, descr
     }
 
     payload = {
-        'Initiator': tenant.first_name,
-        'SecurityCredential': settings.MPESA_INITIATOR_SECURITY_CREDENTIAL,
-        'CommandID': 'BusinessPayment',
+        "BusinessShortCode": landlord.till_number,   
+        'Password': generate_password(landlord.till_number),
+        'Timestamp': datetime.now().strftime('%Y%m%d%H%M%S'),
+        'TransactionType': 'CustomerBuyGoodsOnline',
         'Amount': amount,
-        'PartyA': landlord.till_number,
-        'PartyB': phone_number,
-        'Remarks': description,
-        'QueueTimeOutURL': f'https://realtor-1-kllo.onrender.com/rent/tenants/{id}/payments',  # Replace with your queue timeout URL
-        'ResultURL': f'https://realtor-1-kllo.onrender.com/rent/tenants/{id}/payments', 
+        'PartyA': phone_number,
+        'PartyB': landlord.till_number,
+        'PhoneNumber': phone_number,
+        'CallBackURL': f'https://rent-ease-jxhm.onrender.com/rent/tenants/{id}/payments',
         'AccountReference': reference,
         'TransactionDesc': description
     }
@@ -777,11 +779,6 @@ def mpesa_till_payment(id,landlord,tenant,phone_number, amount, reference, descr
     except requests.exceptions.RequestException as e:
         return {'error': str(e)}
 
-def generate_password():
-    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-    password = base64.b64encode(f'{settings.MPESA_SHORTCODE}{settings.MPESA_PASSKEY}{timestamp}'.encode()).decode('utf-8')
-    return password
-
 def payments(request, tenant_id):
     if request.method == "POST":
         try:
@@ -789,7 +786,6 @@ def payments(request, tenant_id):
             utilities = Utilities.objects.filter(tenant=tenant)
             data = json.loads(request.body)
             amount_paid = int(data.get("amount", 0))
-            print(amount_paid)
             total_amount_due = sum(utility.total for utility in utilities)
 
             for utility in utilities:
@@ -806,29 +802,31 @@ def payments(request, tenant_id):
 
             landlord = tenant.landlord
             phone = tenant.phone
+            landlord_phone = f'0{landlord.phone}'
+            if landlord_phone.startswith('0'):
+                landlord_phone = '254' + phone[1:]
+
             if phone.startswith('0'):
                 phone = '254' + phone[1:]
 
             if landlord.paybill_number:
-                print(amount_paid)
                 response = mpesa_express_payment(
+                    tenant_id,
                     landlord,
                     tenant,
-                    tenant_id,
                     phone,
                     amount_paid,
-                    f"Payment for {tenant.first_name} {tenant.last_name}",
-                    f"Utility payment for {tenant.house_number}"
+                    f"For {tenant.house_number}"
                 )
             elif landlord.till_number:
                 mpesa_till_payment(
+                 tenant_id,
                  landlord,
                  tenant,
-                 tenant_id,
                  phone,
                  amount_paid,
-                 f"Payment for {tenant.first_name} {tenant.last_name}",
-                 f"Utility payment for {tenant.house_number}"
+                 f"{tenant.first_name}",
+                 f"For {tenant.house_number}"
                    )
 
             payment = Payments.objects.create(
@@ -896,7 +894,6 @@ def payments_received(request, landlord_id):
         payment_received_data = []
         for payment_received in payments_received:
             payment = PaymentsReceived.objects.create(landlord = landlord,tenant=payment_received.tenant, amount = payment_received,balance = payment_received.amount,total_amount = payment_received.amount)
-            print(payment)
             payment_received_data.append({
                 "tenant_name": payment_received.tenant.first_name,
                 "total_amount_paid": payment_received.paid,
@@ -1034,7 +1031,6 @@ def delete_utilities(request, utilities_id, tenant_id):
             total_rent = 0  
 
         total = total_utility_cost + total_rent
-        print(total_rent)
 
         Payments.objects.filter(tenant=tenant).update(amount=total)
 
