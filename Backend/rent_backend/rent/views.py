@@ -734,7 +734,7 @@ def mpesa_express_payment(id,landlord,tenant,phone_number, amount, reference, de
         'TransactionType': 'CustomerPayBillOnline',
         'Amount': amount,
         'PartyA': phone_number,
-        'PartyB': settings.MPESA_SHORTCODE,
+        'PartyB': landlord.paybill_number,
         'PhoneNumber': phone_number,
         'CallBackURL': f'https://realtor-1-kllo.onrender.com/rent/tenants/{id}/payments', 
         'AccountReference': reference,
