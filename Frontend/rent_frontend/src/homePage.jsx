@@ -30,11 +30,30 @@ function HomePage() {
             <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 px-4">
   <div className="flex flex-col items-center h-full max-w-2xl px-4 py-8">
     <h1 className="m-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-blue-500">
-      About us
+    About Rent_Easy
     </h1>
-    <p className="mb-0 mt-2 text-center text-black dark:text-black">
-      Track work across the enterprise through an open, collaborative platform. Link issues across Jira and ingest data from other software development tools, so your IT support and operations teams have richer contextual information to rapidly respond to requests, incidents, and changes.
-    </p>
+    <p className="mb-4 mt-4 text-center text-black dark:text-black leading-relaxed">
+  <span className="block text-lg font-semibold mb-2">Welcome to Rent_Easy</span>
+  Your ultimate solution for hassle-free rent collection and property management. Designed with both landlords and tenants in mind, Rent_Easy streamlines the rental process, making it simple, secure, and efficient.
+  
+  <span className="block mt-4 text-xl font-semibold text-black dark:text-black">For Landlords:</span>
+  <ul className="list-disc list-inside text-black dark:text-black">
+    <li><strong>Automated Rent Collection:</strong> Say goodbye to manual tracking and reminders. Rent_Easy automates rent collection, ensuring you receive payments on time, every time.</li>
+    <li><strong>Comprehensive Management Tools:</strong> Manage all your properties, track payment histories, and generate detailed financial reports—all from a single dashboard.</li>
+    <li><strong>Secure Transactions:</strong> Our platform ensures that all transactions are encrypted and secure, giving you peace of mind.</li>
+  </ul>
+  
+  <span className="block mt-4 text-xl font-semibold text-black dark:text-black">For Tenants:</span>
+  <ul className="list-disc list-inside text-black dark:text-black">
+    <li><strong>Convenient Payment:</strong> Pay your rent easily and securely using Mpesa</li>
+    <li><strong>Transparent Communication:</strong> Keep track of your payment history, receive reminders.</li>
+    <li><strong>Support and Assistance:</strong> Our dedicated support team is here to help you with any questions or issues you may encounter.</li>
+  </ul>
+
+  <span className="block mt-4 text-lg font-semibold text-gray-900 dark:text-gray-100">At Rent_Easy</span>
+  We believe in simplifying the rental experience for everyone involved. Our intuitive interface, robust features, and commitment to security make us the preferred choice for rent collection and property management. Join the Rent_Easy community today and discover how we can make your rental experience better than ever.
+</p>
+
   </div>
   <div className="flex flex-col items-center -full max-w-2xl px-4 py-8">
     <h1 className="m-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-blue-500">

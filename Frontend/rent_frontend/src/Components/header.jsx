@@ -15,7 +15,7 @@ function Header() {
             <div className='flex justify-between items-center max-w-6xl mx-auto p-3'>
                 <Link to={'#'}>
                     <h1 className='font-bold text-sm sm:text-xl flex flex-wrap'>
-                        <span className='text-black'>Rent_Ease</span>
+                        <span className='text-black'>Rent_Easy</span>
                     </h1>
                 </Link>
                 <div className='relative'>
