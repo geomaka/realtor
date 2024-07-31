@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import Image from '../public/icons8-home.svg'; // Adjust the path as necessary
+import Image from '../public/icons8-home.svg';
 
 function PropertyName() {
     const [property, setPropertyName] = useState('');
@@ -16,7 +16,7 @@ function PropertyName() {
             property_location
         };
 
-        fetch(`https://realtor-1-kllo.onrender.com/rent/${landlordID}/property`, {
+        fetch(`https://rent-ease-jxhm.onrender.com/rent/${landlordID}/property`, {
             method: 'POST',
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(propertyData)

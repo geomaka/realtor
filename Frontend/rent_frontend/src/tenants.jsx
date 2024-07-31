@@ -22,7 +22,7 @@ function Tenants() {
   useEffect(() => {
     const fetchTenants = async () => {
       try {
-        const response = await fetch(`https://realtor-1-kllo.onrender.com/rent/${landlordID}/tenants`);
+        const response = await fetch(`https://rent-ease-jxhm.onrender.com/rent/${landlordID}/tenants`);
         const data = await response.json();
         setTenants(data.tenants);
         const uniqueProperties = [...new Set(data.tenants.map(tenant => tenant.property_details.property_name))];

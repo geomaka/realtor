@@ -32,7 +32,7 @@ function Login() {
             password
         }
 
-        fetch("https://realtor-1-kllo.onrender.com/rent/login", {
+        fetch("https://rent-ease-jxhm.onrender.com/rent/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data_to_be_posted)

@@ -48,7 +48,7 @@ function AdminSignupForm() {
     };
     console.log(JSON.stringify(data))
 
-    fetch('https://realtor-1-kllo.onrender.com/rent/adminsignup', {
+    fetch('https://rent-ease-jxhm.onrender.com/rent/adminsignup', {
       method: 'POST',
       body: JSON.stringify(data),
       headers: {

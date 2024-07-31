@@ -70,7 +70,7 @@ const Property = () => {
     };
 
     try {
-      const response = await fetch(`https://realtor-1-kllo.onrender.com/rent/${landlordID}/${propertyID}/property_details`, {
+      const response = await fetch(`https://rent-ease-jxhm.onrender.com/rent/${landlordID}/${propertyID}/property_details`, {
         method: 'POST',
         body: JSON.stringify(formData),
         headers: { 'Content-Type': 'application/json' },

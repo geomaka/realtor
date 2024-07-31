@@ -8,7 +8,7 @@ function Logout (){
 
     let logOut = async(e) =>{
         e.preventDefault()
-        let response = await fetch("https://realtor-1-kllo.onrender.com/rent/logout")
+        let response = await fetch("https://rent-ease-jxhm.onrender.com/rent/logout")
         let data = await response.json()
         if(data.message){
             setMessage(data.message)

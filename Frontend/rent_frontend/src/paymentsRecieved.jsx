@@ -10,7 +10,7 @@ function PaymentsReceived(){
     useEffect(() => {
         const fetchPaymentsMade = async () => {
             try{
-            let response = await fetch(`https://realtor-1-kllo.onrender.com/rent/landlord/${landlordID}`)
+            let response = await fetch(`https://rent-ease-jxhm.onrender.com/rent/landlord/${landlordID}`)
             let data = await response.json()
             console.log(data.payments_received)
             setPayments(data.payments_received)

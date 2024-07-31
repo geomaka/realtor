@@ -11,7 +11,7 @@ const ForgotPassword = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post('https://realtor-1-kllo.onrender.com/rent/api/forgot-password/', { email });
+      const response = await axios.post('https://rent-ease-jxhm.onrender.com/rent/api/forgot-password/', { email });
       setMessage('Password reset link has been sent to your email.');
       setError('');
     } catch (error) {

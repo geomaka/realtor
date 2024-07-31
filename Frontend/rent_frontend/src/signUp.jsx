@@ -24,7 +24,7 @@ function SignUp() {
 
   const fetchLandlords = async () => {
     try {
-      const response = await fetch("https://realtor-1-kllo.onrender.com/rent/signup");
+      const response = await fetch("https://rent-ease-jxhm.onrender.com/rent/signup");
       if (!response.ok) {
         throw new Error("Failed to fetch landlords.");
       }
@@ -67,7 +67,7 @@ function SignUp() {
     };
 
     try {
-      const response = await fetch("https://realtor-1-kllo.onrender.com/rent/signup", {
+      const response = await fetch("https://rent-ease-jxhm.onrender.com/rent/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

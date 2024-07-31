@@ -12,7 +12,7 @@ function Account() {
     let { landlordID } = useParams()
 
     const fetchLandlord = async () => {
-        let response = await fetch(`https://realtor-1-kllo.onrender.com/rent/landlord/${landlordID}`)
+        let response = await fetch(`https://rent-ease-jxhm.onrender.com/rent/landlord/${landlordID}`)
         let data = await response.json()
         console.log(data.landlord)
         setFirst(data.landlord.first_name)

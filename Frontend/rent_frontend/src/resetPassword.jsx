@@ -24,7 +24,7 @@ const ResetPassword = () => {
         uid, token, password 
       }
 
-      const response = await axios.post('https://realtor-1-kllo.onrender.com/rent/api/reset-password', dataToBePosted);
+      const response = await axios.post('https://rent-ease-jxhm.onrender.com/rent/api/reset-password', dataToBePosted);
 
       setMessage('Password has been reset successfully.');
       setError('');
