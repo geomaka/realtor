@@ -13,7 +13,7 @@ function Payments() {
     try {
       let response = await fetch(`https://rent-ease-jxhm.onrender.com/rent/tenants/${tenantID}/payments`);
       let data = await response.json();
-      setPayments(data.payments);
+      setTimeout(setPayments(data.payments),3000)
       console.log(payments[0].name)
     } catch (error) {
       console.error("Error fetching payments:", error);
