@@ -1,6 +1,5 @@
 import React from "react"
 import { Link } from "react-router-dom"
-import Building from '../public/pexels-rickyrecap-2556001.svg'
 import Footer from "./Components/footer"
 import Navbar from "./Components/homeBar"
 
@@ -19,7 +18,6 @@ function HomePage() {
                                     <button className='rounded px-10 py-3 text-white bg-blue-500 hover:bg-blue-600 m-4'>
                                         I'm a landlord</button>
                                 </Link>
-                                {/* <img className='w-screen h-screen pl-4 pr-2' src={Building} /> */}
                                 <Link to={'/signup'} className="inline-block align-baseline font-bold text-bg text-white hover:text-blue-800 mb-2">I'm a tenant</Link>
                             </div>
                         </div>
