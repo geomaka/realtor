@@ -82,7 +82,7 @@ function Utilities() {
       <div className="flex">
         <div className="w-full max-w-md">
           <h1 className="m-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-black">Add utilities</h1>
-          {/* <h2 className="m-4 text-lg font-normal text-gray-500 lg:text-xl dark:text-gray-400">Add autility and if the cost is to be djusted later set it to "0" if it is fixed set the cost e.g "garbage collection : 100 ".</h2> */}
+          <h2 className="m-4 text-lg font-normal text-gray-500 lg:text-xl dark:text-gray-400">Add utilities before procedding to make any payments</h2>
           <form onSubmit={submit} className="bg-white  px-8 pt-6 pb-8 m-0">
             <ul>
               {utilities.length === 0 ? (

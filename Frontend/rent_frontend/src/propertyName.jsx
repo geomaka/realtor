@@ -69,7 +69,7 @@ function PropertyName() {
                         name="property_location"
                         value={property_location}
                         onChange={(e) => setLocation(e.target.value)}
-                        placeholder="Enter the location of the property"
+                        placeholder='Enter the location of the property e.g. "Tawa houses, Nairobi"'
                         className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                         required
                     />
