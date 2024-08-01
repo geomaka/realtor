@@ -719,6 +719,8 @@ def generate_password(number):
 
 
 def mpesa_express_payment(id,landlord,tenant,phone_number, amount, description):
+    if amount <= 0:
+        return {'error': 'Invalid amount. Amount must be greater than zero.'}
     endpoint = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
     access_token = generate_access_token()
     if not access_token:
@@ -751,19 +753,22 @@ def mpesa_express_payment(id,landlord,tenant,phone_number, amount, description):
         print(f"Error making M-Pesa payment request: {e}")
         return {'error': str(e)}
 
-def mpesa_till_payment(id,landlord,landlord_phone,tenant,phone_number, amount, reference, description):
-    endpoint = 'https://sandbox.safaricom.co.ke/mpesa/b2b/v1/paymentrequest'
+def mpesa_till_payment(id, landlord, tenant, phone_number, amount, reference, description):
+    if amount <= 0:
+        print(amount)
+        return {'error': 'Invalid amount. Amount must be greater than zero.'}
+    endpoint = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
     headers = {
         'Authorization': f'Bearer {generate_access_token()}',
         'Content-Type': 'application/json'
     }
 
     payload = {
-        "BusinessShortCode": landlord.till_number,   
+        "BusinessShortCode": landlord.till_number,
         'Password': generate_password(landlord.till_number),
         'Timestamp': datetime.now().strftime('%Y%m%d%H%M%S'),
         'TransactionType': 'CustomerBuyGoodsOnline',
-        'Amount': amount,
+        'Amount': int(amount),
         'PartyA': phone_number,
         'PartyB': landlord.till_number,
         'PhoneNumber': phone_number,
@@ -786,6 +791,7 @@ def payments(request, tenant_id):
             utilities = Utilities.objects.filter(tenant=tenant)
             data = json.loads(request.body)
             amount_paid = int(data.get("amount", 0))
+            amount = amount_paid
             total_amount_due = sum(utility.total for utility in utilities)
 
             for utility in utilities:
@@ -795,7 +801,7 @@ def payments(request, tenant_id):
                         utility.total = 0
                     else:
                         utility.total -= amount_paid
-                        # amount_paid = 0
+                        amount_paid = 0
                     utility.save()
 
             new_balance = sum(utility.total for utility in utilities)
@@ -804,30 +810,31 @@ def payments(request, tenant_id):
             phone = tenant.phone
             landlord_phone = f'0{landlord.phone}'
             if landlord_phone.startswith('0'):
-                landlord_phone = '254' + phone[1:]
+                landlord_phone = '254' + landlord_phone[1:]
 
             if phone.startswith('0'):
                 phone = '254' + phone[1:]
 
+            response = None
             if landlord.paybill_number:
                 response = mpesa_express_payment(
                     tenant_id,
                     landlord,
                     tenant,
                     phone,
-                    amount_paid,
+                    amount,
                     f"For {tenant.house_number}"
                 )
             elif landlord.till_number:
-                mpesa_till_payment(
-                 tenant_id,
-                 landlord,
-                 tenant,
-                 phone,
-                 amount_paid,
-                 f"{tenant.first_name}",
-                 f"For {tenant.house_number}"
-                   )
+                response = mpesa_till_payment(
+                    tenant_id,
+                    landlord,
+                    tenant,
+                    phone,
+                    int(amount),
+                    f"{tenant.first_name}",
+                    f"For {tenant.house_number}"
+                )
 
             payment = Payments.objects.create(
                 landlord=landlord,

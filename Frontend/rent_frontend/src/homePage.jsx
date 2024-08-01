@@ -60,10 +60,8 @@ function HomePage() {
       Contact us
     </h1>
     <div className="mt-4 text-center">
-      <p className="text-lg text-gray-800 dark:text-black">123 Main Street, Suite 101</p>
-      <p className="text-lg text-gray-800 dark:text-black">City, State, ZIP Code</p>
-      <p className="text-lg text-gray-800 dark:text-black">Phone: (123) 456-7890</p>
-      <p className="text-lg text-gray-800 dark:text-black">Email: contact@yourcompany.com</p>
+      <p className="text-lg text-gray-800 dark:text-black">Phone: 0717172783</p>
+      <p className="text-lg text-gray-800 dark:text-black">Email: gkaranja994@gmail.com.com</p>
     </div>
     <div className="mt-4 text-center">
       <p className="text-lg font-bold text-gray-800 dark:text-black">Business Hours:</p>

@@ -14,6 +14,7 @@ function Payments() {
       let response = await fetch(`https://rent-ease-jxhm.onrender.com/rent/tenants/${tenantID}/payments`);
       let data = await response.json();
       setPayments(data.payments);
+      console.log(payments[0].name)
     } catch (error) {
       console.error("Error fetching payments:", error);
     }
@@ -36,7 +37,7 @@ function Payments() {
       });
       let data = await response.json();
       setPayments(prevPayments => [data.data, ...prevPayments]);
-      setAmount(''); 
+      setAmount('');
     } catch (error) {
       console.error("Error making payment:", error);
     }
@@ -86,15 +87,21 @@ function Payments() {
             </tr>
           </thead>
           <tbody>
-            {payments.map((payment, index) => (
-              <tr key={index}>
-                <td className='px-6 py-4'>{payment.name}</td>
-                <td className='px-6 py-4'>{payment.landlord}</td>
-                <td className='px-6 py-4'>{payment.paid}</td>
-                <td className='px-6 py-4'>{payment.balance}</td>
-                <td className='px-6 py-4'>{format(new Date(payment.date_paid), "MMMM dd, yyyy HH:mm")}</td>
+            {payments.length > 0 ? (
+              payments.map((payment, index) => (
+                <tr key={index}>
+                  <td className='px-6 py-4'>{payment.name}</td>
+                  <td className='px-6 py-4'>{payment.landlord}</td>
+                  <td className='px-6 py-4'>{payment.paid}</td>
+                  <td className='px-6 py-4'>{payment.balance}</td>
+                  <td className='px-6 py-4'>{format(new Date(payment.date_paid), "MMMM dd, yyyy HH:mm")}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td className='px-6 py-4 text-center' colSpan="5">No data available</td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
         <button onClick={generatePDF} className='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 ml-4 mt-4'>Download as pdf</button>

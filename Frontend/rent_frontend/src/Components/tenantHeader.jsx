@@ -13,7 +13,7 @@ function TenantHeader() {
     return (
         <header className='bg-blue-500 shadow-md'>
             <div className='flex justify-between items-center max-w-6xl mx-auto p-3'>
-                <Link to={'/'}>
+                <Link to={'#'}>
                     <h1 className='font-bold text-sm sm:text-xl flex flex-wrap'>
                         <span className='text-black'>Rent_Ease</span>
                     </h1>
