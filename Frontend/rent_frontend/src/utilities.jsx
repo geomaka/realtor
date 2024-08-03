@@ -11,7 +11,6 @@ function Utilities({ propertyID }) {
   const { tenantID } = useParams();
 
   useEffect(() => {
-    // Ensure propertyID and tenantID are defined before making the request
     if (propertyID && tenantID) {
       const fetchBedroomCount = async () => {
         try {
@@ -26,15 +25,13 @@ function Utilities({ propertyID }) {
         }
       };
 
-      // Delay the execution of the async function
       const timer = setTimeout(() => {
         fetchBedroomCount();
       }, 2000);
 
-      // Clean up the timeout if the component unmounts
       return () => clearTimeout(timer);
     }
-  }, [propertyID, tenantID]); // Ensure useEffect depends on both propertyID and tenantID
+  }, [propertyID, tenantID]); 
 
   const removeUtility = async (index) => {
     const utilityID = utilities[index].id;

@@ -638,6 +638,8 @@ def tenant_detail(request, tenant_id):
         tenant = Tenant.objects.get(pk=tenant_id)
         property_instance = tenant.property
         property_id = property_instance.id
+        utilities = Utilities.objects.filter(tenant=tenant)
+        utilities_data = [{'utility_name': utility.utility_name, 'cost': utility.utility_cost, "total" : utility.total} for utility in utilities]
 
         tenant_data = {
             'house_number': tenant.house_number,
@@ -645,7 +647,8 @@ def tenant_detail(request, tenant_id):
             'last_name': tenant.last_name,
             'email': tenant.email,
             'phone': tenant.phone,
-            'property_id': property_id
+            'property_id': property_id,
+            'utilities': utilities_data
         }
         return JsonResponse(tenant_data)
     except Tenant.DoesNotExist:
