@@ -1001,11 +1001,24 @@ def utilities(request, property_id, tenant_id):
 
                 total = base_rent + total_utility_cost
 
-                payment, created = Payments.objects.update_or_create(
-                    tenant=tenant,
-                    landlord=tenant.landlord,
-                    defaults={'amount': total, 'paid': 0, 'balance': 0, 'date_paid': timezone.now(), 'date_due': timezone.now()}
-                )
+                payment = Payments.objects.filter(tenant=tenant, landlord=tenant.landlord).first()
+                if payment:
+                    payment.amount = total
+                    payment.paid = 0
+                    payment.balance = 0
+                    payment.date_paid = timezone.now()
+                    payment.date_due = timezone.now()
+                    payment.save()
+                else:
+                    payment = Payments.objects.create(
+                        tenant=tenant,
+                        landlord=tenant.landlord,
+                        amount=total,
+                        paid=0,
+                        balance=0,
+                        date_paid=timezone.now(),
+                        date_due=timezone.now()
+                    )
 
             return JsonResponse({'utilities': utilities_data, 'total_utility_cost': total_utility_cost, 'total': total}, status=201)
 

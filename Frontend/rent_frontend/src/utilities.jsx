@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from 'axios';
-import { Link } from 'react-router-dom';
-import Footer from "./Components/footer";
-import TenantHeader from "./Components/tenantHeader";
 
 function Utilities({ propertyID }) {
   const [bedroomCount, setBedroomCount] = useState('');
@@ -13,30 +10,37 @@ function Utilities({ propertyID }) {
 
   const { tenantID } = useParams();
 
-  console.log(propertyID)
+  useEffect(() => {
+    // Ensure propertyID and tenantID are defined before making the request
+    if (propertyID && tenantID) {
+      const fetchBedroomCount = async () => {
+        try {
+          const response = await fetch(`https://rent-ease-jxhm.onrender.com/rent/${propertyID}/${tenantID}/house_details`);
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          const data = await response.json();
+          setBedroomCount(data.bedroom_count);
+        } catch (error) {
+          console.error('Error fetching bedroom count:', error);
+        }
+      };
+
+      // Delay the execution of the async function
+      const timer = setTimeout(() => {
+        fetchBedroomCount();
+      }, 2000);
+
+      // Clean up the timeout if the component unmounts
+      return () => clearTimeout(timer);
+    }
+  }, [propertyID, tenantID]); // Ensure useEffect depends on both propertyID and tenantID
 
   const removeUtility = async (index) => {
     const utilityID = utilities[index].id;
     await deleteUtility(utilityID);
     setUtilities(utilities.filter((_, i) => i !== index));
   };
-
-  const getBedroomCount = async () => {
-    try {
-      const response = await fetch(`https://rent-ease-jxhm.onrender.com/rent/${propertyID}/${tenantID}/house_details`);
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const data = await response.json();
-      setBedroomCount(data.bedroom_count);
-    } catch (error) {
-      console.error('Error fetching bedroom count:', error);
-    }
-  };
-
-  useEffect(() => {
-    getBedroomCount();
-  }, [propertyID, tenantID]);
 
   const deleteUtility = async (utilityID) => {
     try {
