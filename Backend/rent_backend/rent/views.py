@@ -636,16 +636,22 @@ def tenants(request,landlord_id):
 def tenant_detail(request, tenant_id):
     try:
         tenant = Tenant.objects.get(pk=tenant_id)
+        property_instance = tenant.property
+        property_id = property_instance.id
+
         tenant_data = {
             'house_number': tenant.house_number,
             'first_name': tenant.first_name,
             'last_name': tenant.last_name,
             'email': tenant.email,
             'phone': tenant.phone,
+            'property_id': property_id
         }
         return JsonResponse(tenant_data)
     except Tenant.DoesNotExist:
         return JsonResponse({'error': 'Tenant not found'}, status=404)
+    except Property.DoesNotExist:
+        return JsonResponse({'error': 'Property not found for this tenant'}, status=404)
 
 
 def get_dynamic_date(date_moved_in):

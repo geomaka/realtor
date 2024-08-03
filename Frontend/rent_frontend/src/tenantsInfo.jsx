@@ -1,41 +1,55 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import user from "../public/user.svg"
+import user from "../public/user.svg";
 import DeleteTenant from "./delete";
+import Utilities from "./utilities";
 
-function TenantInfo(){
-    const [first_name, setFirst] = useState('')
-    const [last_name, setLast] = useState('')
-    const [email,setEmail] = useState('')
-    const [phone,setPhone] = useState('')
+function TenantInfo() {
+    const [first_name, setFirst] = useState('');
+    const [last_name, setLast] = useState('');
+    const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
+    const [propertyID, setPropertyID] = useState('');
 
-    const {landlordID} = useParams()
-    const{tenantID} = useParams()
-    console.log(landlordID)
+    const { landlordID } = useParams();
+    const { tenantID } = useParams();
 
-    const fetchTenantDetails = async () =>{
-        let response = await fetch(`https://rent-ease-jxhm.onrender.com/rent/tenants/${tenantID}`)
-        let data = await response.json()
-        setFirst(data.first_name)
-        setLast(data.last_name)
-        setEmail(data.email)
-        setPhone(data.phone)
-    }
+    const fetchTenantDetails = async () => {
+        try {
+            let response = await fetch(`https://rent-ease-jxhm.onrender.com/rent/tenants/${tenantID}`);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            let data = await response.json();
+            setFirst(data.first_name);
+            setLast(data.last_name);
+            setEmail(data.email);
+            setPhone(data.phone);
+            setPropertyID(data.property_id);
+            console.log(data)
+        } catch (error) {
+            console.error('Error fetching tenant details:', error);
+        }
+    };
 
-    useEffect(() =>{
-        fetchTenantDetails()
-    },[])
+    useEffect(() => {
+        fetchTenantDetails();
+    }, [tenantID]);
 
-    return(
+    return (
         <>
             <div className="bg-white overflow-hidden shadow rounded-lg border">
                 <div className="px-4 py-5 sm:px-6">
-                    <Link to={`/${landlordID}/tenants`} className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800 mb-4" >Back</Link>
+                    <Link to={`/${landlordID}/tenants`} className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800 mb-4">
+                        Back
+                    </Link>
                     <h3 className="text-lg leading-6 font-medium text-gray-900">
                         Tenant's info:
                     </h3>
-                    <img className="h-32 w-32 rounded-full border-4 border-white dark:border-gray-800 mx-auto my-4"
-                        src={user} alt={first_name} />
+                    <img
+                        className="h-32 w-32 rounded-full border-4 border-white dark:border-gray-800 mx-auto my-4"
+                        src={user} alt={first_name}
+                    />
                 </div>
                 <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
                     <dl className="sm:divide-y sm:divide-gray-200">
@@ -65,10 +79,11 @@ function TenantInfo(){
                         </div>
                     </dl>
                 </div>
-                < DeleteTenant />
+                <Utilities propertyID={propertyID} />
+                <DeleteTenant />
             </div>
         </>
-    )
+    );
 }
 
-export default TenantInfo
+export default TenantInfo;

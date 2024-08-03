@@ -29,7 +29,7 @@ function Tenant (){
             <TenantHeader/>
             <h1 className="m-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-black">Welcome <span className="text-blue-600 dark:text-blue-500">{first_name} {last_name}</span></h1>
             <h2 className="m-4 text-lg font-normal text-gray-500 lg:text-xl dark:text-gray-400">{email}</h2>
-            < Utilities />
+            {/* < Utilities /> */}
             <Payments />
             {/* <Link to = {`/${tenantID}/payments`}>Make payments</Link> */}
             <Logout />

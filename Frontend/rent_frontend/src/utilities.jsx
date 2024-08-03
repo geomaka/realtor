@@ -5,31 +5,40 @@ import { Link } from 'react-router-dom';
 import Footer from "./Components/footer";
 import TenantHeader from "./Components/tenantHeader";
 
-function Utilities() {
-  const [bedroomCount, setBedroomCount] = useState('')
+function Utilities({ propertyID }) {
+  const [bedroomCount, setBedroomCount] = useState('');
   const [inputFields, setInputFields] = useState([{ utility_name: '', utility_cost: '' }]);
-  const [utilities, setUtilities] = useState([])
-  const { tenantID,propertyID } = useParams();
-  const [total, setTotal] = useState(0)
+  const [utilities, setUtilities] = useState([]);
+  const [total, setTotal] = useState(0);
 
-  const removeUtility = (index) => {
+  const { tenantID } = useParams();
+
+  console.log(propertyID)
+
+  const removeUtility = async (index) => {
     const utilityID = utilities[index].id;
-    deleteUtility(utilityID, tenantID)
+    await deleteUtility(utilityID);
     setUtilities(utilities.filter((_, i) => i !== index));
   };
 
-  const getBedroomCount = async () =>{
-    const response = await fetch (`https://rent-ease-jxhm.onrender.com/rent/${propertyID}/${tenantID}/house_details`)
-    const data = await response.json()
-    console.log(data)
-    setBedroomCount(data.bedroom_count)
-  }
+  const getBedroomCount = async () => {
+    try {
+      const response = await fetch(`https://rent-ease-jxhm.onrender.com/rent/${propertyID}/${tenantID}/house_details`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      setBedroomCount(data.bedroom_count);
+    } catch (error) {
+      console.error('Error fetching bedroom count:', error);
+    }
+  };
 
-  useEffect(() =>{
-    getBedroomCount()
-  },[propertyID,tenantID])
+  useEffect(() => {
+    getBedroomCount();
+  }, [propertyID, tenantID]);
 
-  const deleteUtility = async (utilityID, tenantID) => {
+  const deleteUtility = async (utilityID) => {
     try {
       let response = await fetch(`https://rent-ease-jxhm.onrender.com/rent/${tenantID}/delete-utilities/${utilityID}`, {
         method: "DELETE",
@@ -42,18 +51,17 @@ function Utilities() {
 
       const data = await response.json();
       if (data.success) {
-        console.log(data);
-        setTotal(data.total)
+        setTotal(data.total);
       } else {
-        console.log("Failed");
+        console.log("Failed to delete utility");
       }
     } catch (error) {
-      console.log(error);
+      console.error('Error deleting utility:', error);
     }
-  }
+  };
 
   const handleFormChange = (index, event) => {
-    let newData = [...inputFields];
+    const newData = [...inputFields];
     newData[index][event.target.name] = event.target.value;
     setInputFields(newData);
   };
@@ -62,19 +70,16 @@ function Utilities() {
     setInputFields([...inputFields, { utility_name: '', utility_cost: '' }]);
   };
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    const dataToBePosted = { bedroomCount,inputFields };
-    let jsonData = JSON.stringify(dataToBePosted)
-    console.log(jsonData);
-    axios.post(`https://rent-ease-jxhm.onrender.com/rent/${tenantID}/${propertyID}/add-utilities`, dataToBePosted)
-      .then(response => {
-        setUtilities(response.data.utilities)
-        setTotal(response.data.total)
-        console.log(utilities)
-        console.log(response.data)
-      })
-      .catch(error => console.error(error));
+    const dataToBePosted = { bedroomCount, inputFields };
+    try {
+      const response = await axios.post(`https://rent-ease-jxhm.onrender.com/rent/${tenantID}/${propertyID}/add-utilities`, dataToBePosted);
+      setUtilities(response.data.utilities);
+      setTotal(response.data.total);
+    } catch (error) {
+      console.error('Error adding utilities:', error);
+    }
   };
 
   return (
@@ -82,8 +87,8 @@ function Utilities() {
       <div className="flex">
         <div className="w-full max-w-md">
           <h1 className="m-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-black">Add utilities</h1>
-          <h2 className="m-4 text-lg font-normal text-gray-500 lg:text-xl dark:text-gray-400">Add utilities before procedding to make any payments</h2>
-          <form onSubmit={submit} className="bg-white  px-8 pt-6 pb-8 m-0">
+          <h2 className="m-4 text-lg font-normal text-gray-500 lg:text-xl dark:text-gray-400">Add utilities before proceeding to make any payments</h2>
+          <form onSubmit={submit} className="bg-white px-8 pt-6 pb-8 m-0">
             <ul>
               {utilities.length === 0 ? (
                 <h1 className="mb-4">No utilities</h1>
@@ -105,14 +110,15 @@ function Utilities() {
                 ))
               )}
             </ul>
-            <span className="block mt-1 text-gray-500 mb-4">Total : {total}</span>
+            <span className="block mt-1 text-gray-500 mb-4">Total: {total}</span>
             {inputFields.map((input, index) => (
               <div key={index}>
                 <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
-                    Utility name :
+                  <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor={`utility_name_${index}`}>
+                    Utility name:
                   </label>
                   <input
+                    id={`utility_name_${index}`}
                     name="utility_name"
                     placeholder="Utility name"
                     value={input.utility_name}
@@ -121,10 +127,11 @@ function Utilities() {
                   />
                 </div>
                 <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
-                    Utility cost :
+                  <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor={`utility_cost_${index}`}>
+                    Utility cost:
                   </label>
                   <input
+                    id={`utility_cost_${index}`}
                     name="utility_cost"
                     placeholder="Utility cost"
                     value={input.utility_cost}
@@ -139,9 +146,6 @@ function Utilities() {
               <input type="submit" className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800" value="Add" />
             </div>
           </form>
-          <div className="mb-4">
-            {/* {utilities.length === 0 ? (<Link to={'#'} className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800 cursor-not-allowed opacity-50 ml-4">Done</Link>) : (<Link to={'#'} className="ml-4 inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">Done</Link>)} */}
-          </div>
         </div>
       </div>
     </>
