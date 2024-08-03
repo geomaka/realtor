@@ -47,8 +47,8 @@ function Tenant() {
                     <ul>
                         {utilities.map((utility, index) => (
                             <li key={index} className="mb-2">
-                                <div>{utility.utility_name}: Ksh {utility.utility_cost.toFixed(2)}</div>
-                                <span className="block mt-1 text-gray-500 mb-4">Total: {utility.total}</span>
+                                <div>{utility.utility_name} : <span>Ksh {utility.cost}</span></div>
+                                <span>Total to be paid :<span> {utility.total}</span></span>
                             </li>
                         ))}
                     </ul>
