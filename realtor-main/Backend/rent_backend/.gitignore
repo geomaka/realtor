@@ -1,0 +1,5 @@
+rent/__pycache__
+rent/migrations
+db.sqlite3
+.env
+myenv

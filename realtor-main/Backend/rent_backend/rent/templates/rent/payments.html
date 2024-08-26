@@ -1,0 +1,16 @@
+{% extends "rent/layout.html" %}
+
+{% block body %}
+
+{% if message %}
+    <h2>{{message}}</h2>
+{% endif %}
+
+<form action="{% url 'payments' tenant_id %}" method="post">
+    {% csrf_token %}
+    <input type="number" name="amount" placeholder="Enter the amount to pay">
+    <button type="submit">Pay</button>
+</form>
+
+
+{% endblock %}

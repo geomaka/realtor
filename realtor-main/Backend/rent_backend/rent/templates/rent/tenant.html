@@ -1,0 +1,14 @@
+{% extends "rent/layout.html" %}
+
+{% block body %}
+<h1>Tenant info</h1>
+    <ul>
+        <li>House no: {{pk}}</li>
+        <li>Name : {{first_name}} {{last_name}}</li>
+        <li>Email : {{email}}</li>
+         <li>Tel : 0{{phone}}</li>
+    </ul>
+    <a href="{% url 'logout' %}">Logout</a>
+    <a href="{% url 'tenants' %}" style="text-decoration:none ;"> Back</a>
+
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "rent/layout.html"  %}
+
+{% block body %}
+{% if message %}
+    <h2>{{message}}</h2>
+{% endif %}
+    <form method="post" action="{% url 'signup' %}">
+        {% csrf_token %}
+        <input type="text" name="house_number", placeholder="Enter the house number">
+        <input type="text" name="first_name" placeholder="Enter first name"/>
+        <input type="text" name = "last_name" placeholder="Enter last name">
+        <input type="text" name = "phone" placeholder="Enter phone">
+        <input type="email" name="email" placeholder="Enter email">
+        <input type="password" name="password" placeholder="password">
+        <select name="landlord_id">
+            {% for landlord in landlords %}
+            <option value="{{ landlord.id }}">{{ landlord.first_name }} {{landlord.last_name}}</option>
+            {% endfor %}
+        </select>
+        <input type="submit">
+    </form>
+
+{% endblock %}
